@@ -10,13 +10,30 @@
 <body class="bg-gray-200">
 
 <div id="auth-container" class="auth-overlay">
-    <div class="auth-box">
-        <h2>Bem-vindo ao seu Tracker</h2>
-        <input type="email" id="email" placeholder="Email">
-        <input type="password" id="password" placeholder="Senha">
-        <div class="auth-buttons">
-            <button onclick="login()">Entrar</button>
-            <button onclick="signup()" class="btn-secondary">Criar Conta</button>
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">✔</div>
+            <h2>DoTasks</h2>
+            <p>Seu monitor pessoal de hábitos</p>
+        </div>
+        
+        <div class="auth-body">
+            <div class="input-field">
+                <label>E-mail</label>
+                <input type="email" id="email" placeholder="seu@email.com">
+            </div>
+            <div class="input-field">
+                <label>Senha</label>
+                <input type="password" id="password" placeholder="••••••••">
+            </div>
+            
+            <button class="btn-primary" onclick="login()">Entrar no Painel</button>
+            <div class="divider"><span>ou</span></div>
+            <button class="btn-outline" onclick="signup()">Criar nova conta</button>
+        </div>
+        
+        <div class="auth-footer">
+            <p>2026 &copy; Gerenciador de Performance</p>
         </div>
     </div>
 </div>

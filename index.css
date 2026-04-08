@@ -11,7 +11,7 @@ body.bg-gray-200 {
 }
 
 .main-container {
-    max-width: 1800px; /* Largura que você gostou */
+    max-width: 1800px;
     margin: 40px auto;
     padding: 0 20px;
 }
@@ -25,70 +25,67 @@ body.bg-gray-200 {
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
-/* Espaço vazio quando não tem tarefa */
-#habit-grid {
-    min-height: 400px; /* Garante que a tabela não fique pequena */
-    display: table-row-group;
+.header-right { display: flex; align-items: center; }
+.chart-container { position: relative; width: 120px; height: 120px; }
+
+#percentage-label {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold; font-size: 1.2rem;
+}
+
+.user-info { margin-bottom: 10px; font-size: 0.9rem; color: #64748b; }
+.btn-logout { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-left: 10px; }
+
+.input-group { display: flex; gap: 10px; }
+.input-group input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; width: 250px; }
+.input-group button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+.table-wrapper {
+    background: white; padding: 20px; border-radius: 0 0 12px 12px;
+    overflow-x: auto; min-height: 500px; position: relative;
 }
 
 #habit-grid:empty::after {
     content: "Nenhuma tarefa adicionada. Comece agora!";
-    display: block;
-    padding: 100px;
-    text-align: center;
-    color: #94a3b8;
-    font-style: italic;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    display: block; padding: 100px; text-align: center;
+    color: #94a3b8; font-style: italic;
 }
 
-.table-wrapper {
-    background: white;
-    padding: 20px;
-    border-radius: 0 0 12px 12px;
-    overflow-x: auto;
-    min-height: 500px; /* Altura mínima da área da planilha */
-    position: relative;
-}
+table { width: 100%; border-collapse: collapse; }
+th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: center; }
+.sticky-col { position: sticky; left: 0; background: white; z-index: 5; min-width: 250px; font-weight: bold; text-align: left; }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    border: 1px solid #cbd5e1;
-    padding: 12px;
-    text-align: center;
-}
-
-.sticky-col {
-    position: sticky;
-    left: 0;
-    background: white;
-    z-index: 5;
-    min-width: 250px;
-    font-weight: bold;
-    text-align: left;
-}
-
-/* Auth Styles */
+/* --- Auth / Login Corrigido --- */
 .auth-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex; flex-direction: column; /* Alinhamento vertical para o footer */
+    align-items: center; justify-content: center;
+    z-index: 1000; backdrop-filter: blur(8px);
 }
 
-.auth-box {
-    background: white;
-    padding: 40px;
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.auth-card {
+    background: white; width: 100%; max-width: 400px;
+    padding: 40px; border-radius: 20px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-out;
 }
+
+/* Footer centralizado na parte inferior */
+.auth-footer {
+    position: absolute; bottom: 30px;
+    width: 100%; text-align: center;
+    color: white; font-size: 14px; opacity: 0.8;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.auth-header { text-align: center; margin-bottom: 30px; }
+.auth-logo { background: #3b82f6; color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 15px; font-weight: bold; }
+.input-field { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+.input-field label { font-size: 14px; font-weight: 600; color: #475569; }
+.input-field input { padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; }
+.btn-primary { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+.btn-outline { width: 100%; padding: 12px; background: transparent; color: #3b82f6; border: 2px solid #3b82f6; border-radius: 10px; cursor: pointer; font-weight: 600; }
+.divider { text-align: center; margin: 20px 0; border-top: 1px solid #e2e8f0; position: relative; }
+.divider span { position: absolute; top: -10px; background: white; padding: 0 10px; left: 50%; transform: translateX(-50%); color: #94a3b8; font-size: 14px; }

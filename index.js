@@ -1,92 +1,140 @@
-// Importar Firebase (Você precisará configurar as chaves do seu console Firebase aqui)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    // COLE SUAS CHAVES DO FIREBASE AQUI
+    apiKey: "AIzaSyDf8zO40aWn8r3eyibyOuLz4FMXXaDdkk4",
+    authDomain: "dotasks-8038b.firebaseapp.com",
+    projectId: "dotasks-8038b",
+    storageBucket: "dotasks-8038b.firebasestorage.app",
+    messagingSenderId: "14585516549",
+    appId: "1:14585516549:web:38f2ffaf2eced575c8426c",
+    measurementId: "G-8N1JL6NHTY"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- LOGICA DE DATAS ---
+// Funções de Autenticação com Try/Catch detalhado
+window.login = async () => {
+    const e = document.getElementById('email').value;
+    const p = document.getElementById('password').value;
+    if(!e || !p) return alert("Por favor, preencha todos os campos.");
+    try {
+        await signInWithEmailAndPassword(auth, e, p);
+    } catch (err) {
+        console.error("Erro Login:", err.code);
+        alert("Erro ao entrar: " + err.message);
+    }
+};
+
+window.signup = async () => {
+    const e = document.getElementById('email').value;
+    const p = document.getElementById('password').value;
+    if(!e || !p) return alert("Preencha e-mail e senha para criar sua conta.");
+    
+    console.log("Tentando criar conta para:", e); // Log de teste
+
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, e, p);
+        console.log("Conta criada!", userCredential.user);
+        alert("Conta criada com sucesso! Você já está logado.");
+    } catch (err) {
+        console.error("Erro no Firebase Signup:", err.code, err.message);
+        // Tratamento de erros comuns
+        if (err.code === 'auth/email-already-in-use') alert("Este e-mail já está em uso.");
+        else if (err.code === 'auth/weak-password') alert("A senha deve ter pelo menos 6 caracteres.");
+        else alert("Erro ao cadastrar: " + err.message);
+    }
+};
+
+window.logout = () => signOut(auth);
+
+// --- Lógica do App ---
 const agora = new Date();
 const diaHoje = agora.getDate();
 const mesAtual = agora.getMonth();
 const anoAtual = agora.getFullYear();
 const diasNoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
 
-// Gerar cabeçalho apenas dos dias de HOJE em diante
-const headerRow = document.getElementById('header-row');
-for (let i = 1; i <= diasNoMes; i++) {
-    if (i < diaHoje) continue; // Pula dias que já passaram
-
-    const th = document.createElement('th');
-    th.innerText = i;
-    if (i === diaHoje) th.style.background = "#fef3c7";
-    headerRow.appendChild(th);
-}
-
-// --- GRÁFICO ---
 const ctx = document.getElementById('progressChart').getContext('2d');
 let progressChart = new Chart(ctx, {
     type: 'doughnut',
-    data: {
-        datasets: [{
-            data: [0, 100],
-            backgroundColor: ['#3b82f6', '#f1f5f9'],
-            borderWidth: 0
-        }]
-    },
-    options: { cutout: '75%' }
+    data: { datasets: [{ data: [0, 100], backgroundColor: ['#3b82f6', '#f1f5f9'], borderWidth: 0 }] },
+    options: { cutout: '80%', plugins: { tooltip: { enabled: false } } }
 });
 
-// --- FUNÇÕES DE USUÁRIO ---
 window.adicionarHabito = async () => {
     const nome = document.getElementById('habitInput').value;
-    if(!nome) return;
-
-    const habitGrid = document.getElementById('habit-grid');
-    const tr = document.createElement('tr');
-    
-    let html = `<td class="sticky-col">${nome}</td>`;
-    for (let i = 1; i <= diasNoMes; i++) {
-        if (i < diaHoje) continue; // Não mostra checkbox para o passado
-        html += `<td><input type="checkbox" class="habit-check"></td>`;
-    }
-    
-    tr.innerHTML = html;
-    habitGrid.appendChild(tr);
+    if (!nome || !auth.currentUser) return;
+    const habitRef = doc(collection(db, "users", auth.currentUser.uid, "habits"), nome);
+    await setDoc(habitRef, { nome, checks: {} });
     document.getElementById('habitInput').value = "";
-    atualizarProgresso();
 };
+
+function carregarHabitos(uid) {
+    onSnapshot(collection(db, "users", uid, "habits"), (snap) => {
+        const habitos = snap.docs.map(d => d.data());
+        renderizarTabela(habitos);
+    });
+}
+
+function renderizarTabela(habitos) {
+    const grid = document.getElementById('habit-grid');
+    const head = document.getElementById('header-row');
+    grid.innerHTML = "";
+    head.innerHTML = '<th class="sticky-col">Tarefa</th>';
+
+    for (let i = 1; i <= diasNoMes; i++) {
+        if (i < diaHoje) continue;
+        const th = document.createElement('th');
+        th.innerText = i;
+        if (i === diaHoje) th.style.backgroundColor = "#fef3c7";
+        head.appendChild(th);
+    }
+
+    habitos.forEach(h => {
+        const tr = document.createElement('tr');
+        let html = `<td class="sticky-col">${h.nome}</td>`;
+        for (let i = 1; i <= diasNoMes; i++) {
+            if (i < diaHoje) continue;
+            const isChecked = h.checks && h.checks[i] ? "checked" : "";
+            html += `<td><input type="checkbox" class="habit-check" data-habit="${h.nome}" data-day="${i}" ${isChecked}></td>`;
+        }
+        tr.innerHTML = html;
+        grid.appendChild(tr);
+    });
+    atualizarProgresso();
+}
+
+document.addEventListener('change', async (e) => {
+    if (e.target.classList.contains('habit-check')) {
+        const { habit, day } = e.target.dataset;
+        const ref = doc(db, "users", auth.currentUser.uid, "habits", habit);
+        await setDoc(ref, { checks: { [day]: e.target.checked } }, { merge: true });
+    }
+});
 
 function atualizarProgresso() {
     const checks = document.querySelectorAll('.habit-check');
     const marcados = Array.from(checks).filter(c => c.checked).length;
     const porcento = checks.length > 0 ? Math.round((marcados / checks.length) * 100) : 0;
-
     progressChart.data.datasets[0].data = [porcento, 100 - porcento];
     progressChart.update();
     document.getElementById('percentage-label').innerText = `${porcento}%`;
 }
 
-// Escutador de progresso
-document.addEventListener('change', (e) => {
-    if (e.target.classList.contains('habit-check')) atualizarProgresso();
-});
-
-// --- MONITOR DE LOGIN ---
 onAuthStateChanged(auth, (user) => {
+    const authBox = document.getElementById('auth-container');
+    const appBox = document.getElementById('app-content');
     if (user) {
-        document.getElementById('auth-container').style.display = 'none';
-        document.getElementById('app-content').style.display = 'block';
+        authBox.style.display = 'none';
+        appBox.style.display = 'block';
         document.getElementById('user-email').innerText = user.email;
-        // Aqui você chamaria uma função para carregar os dados do Firestore
+        carregarHabitos(user.uid);
     } else {
-        document.getElementById('auth-container').style.display = 'flex';
-        document.getElementById('app-content').style.display = 'none';
+        authBox.style.display = 'flex';
+        appBox.style.display = 'none';
     }
 });
