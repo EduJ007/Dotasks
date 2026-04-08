@@ -1,19 +1,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { 
-    getAuth, 
-    onAuthStateChanged, 
-    signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, 
-    signOut, 
-    updateProfile 
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, signOut, updateProfile,
+    GoogleAuthProvider, signInWithPopup 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { 
-    getFirestore, 
-    doc, 
-    setDoc, 
-    collection, 
-    onSnapshot 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDf8zO40aWn8r3eyibyOuLz4FMXXaDdkk4",
@@ -28,19 +19,69 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
 
-// --- FUNÇÕES DE ALERTA PERSONALIZADO ---
+// --- TROCA DE MODAIS ---
+window.toggleAuth = (isSignup) => {
+    document.getElementById('auth-container').style.display = isSignup ? 'none' : 'flex';
+    document.getElementById('signup-container').style.display = isSignup ? 'flex' : 'none';
+};
+
+// --- ALERTAS ---
 window.showAlert = (msg) => {
     const alertBox = document.getElementById('custom-alert');
     document.getElementById('alert-message').innerText = msg;
     alertBox.classList.remove('alert-hidden');
-    setTimeout(window.closeAlert, 4000);
+    setTimeout(() => alertBox.classList.add('alert-hidden'), 4000);
 };
 
-window.closeAlert = () => {
-    document.getElementById('custom-alert').classList.add('alert-hidden');
+// --- AUTENTICAÇÃO ---
+window.login = async () => {
+    const e = document.getElementById('email').value;
+    const p = document.getElementById('password').value;
+    try {
+        await signInWithEmailAndPassword(auth, e, p);
+    } catch (err) { showAlert("Erro: " + err.message); }
 };
 
+window.loginGoogle = async () => {
+    try {
+        await signInWithPopup(auth, googleProvider);
+    } catch (err) { showAlert("Erro Google: " + err.message); }
+};
+
+window.signup = async () => {
+    const nome = document.getElementById('userName').value;
+    const e = document.getElementById('signup-email').value;
+    const p = document.getElementById('signup-password').value;
+
+    if(!nome) return showAlert("Diga-nos seu nome!");
+
+    try {
+        const res = await createUserWithEmailAndPassword(auth, e, p);
+        await updateProfile(res.user, { displayName: nome });
+    } catch (err) { showAlert("Erro: " + err.message); }
+};
+
+window.logout = () => signOut(auth);
+
+// --- ESTADO DO USUÁRIO ---
+onAuthStateChanged(auth, (user) => {
+    const loginBox = document.getElementById('auth-container');
+    const signupBox = document.getElementById('signup-container');
+    const appBox = document.getElementById('app-content');
+    
+    if (user) {
+        loginBox.style.display = 'none';
+        signupBox.style.display = 'none';
+        appBox.style.display = 'block';
+        document.getElementById('user-email').innerText = "Olá, " + (user.displayName || user.email);
+        carregarHabitos(user.uid);
+    } else {
+        loginBox.style.display = 'flex';
+        appBox.style.display = 'none';
+    }
+});
 // --- FUNÇÕES DE AUTENTICAÇÃO ---
 window.login = async () => {
     const e = document.getElementById('email').value;

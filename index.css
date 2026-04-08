@@ -121,6 +121,45 @@ th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: center; }
     font-size: 13px;
     letter-spacing: 0.5px;
 }
+/* Botão do Google */
+.btn-google {
+    width: 100%;
+    padding: 12px;
+    background: white;
+    color: #444;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s;
+}
+
+.btn-google:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+/* Link de troca entre Login/Cadastro */
+.auth-switch {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.auth-switch a {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.auth-switch a:hover {
+    text-decoration: underline;
+}
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .auth-header { text-align: center; margin-bottom: 30px; }

@@ -1,94 +1,95 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
+
 <html lang="pt-br">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>DoTasks</title>
+
     <link rel="stylesheet" href="index.css">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 <body class="bg-gray-200">
-<div id="custom-alert" class="alert-hidden">
-    <div class="alert-content">
-        <span id="alert-message"></span>
-        <button onclick="closeAlert()">OK</button>
-    </div>
-</div>
-
-<div class="auth-body">
-    <div class="input-field">
-        <label>Nome Completo</label>
-        <input type="text" id="userName" placeholder="Como quer ser chamado?">
-    </div>
-    <div class="input-field">
-        <label>E-mail</label>
-        <input type="email" id="email" placeholder="seu@email.com">
-    </div>
-    </div>
-<div id="auth-container" class="auth-overlay">
-    <div class="auth-card">
-        <div class="auth-header">
-            <div class="auth-logo">✔</div>
-            <h2>DoTasks</h2>
-            <p>Seu monitor pessoal de hábitos</p>
+    <div id="custom-alert" class="alert-hidden">
+        <div class="alert-content">
+            <span id="alert-message"></span>
+            <button onclick="closeAlert()">OK</button>
         </div>
-        
-        <div class="auth-body">
-            <div class="input-field">
-                <label>E-mail</label>
-                <input type="email" id="email" placeholder="seu@email.com">
-            </div>
-            <div class="input-field">
-                <label>Senha</label>
-                <input type="password" id="password" placeholder="••••••••">
+    </div>
+
+    <div id="auth-container" class="auth-overlay">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">✔</div>
+                <h2>Bem-vindo de volta</h2>
+                <p>Acesse seu painel de performance</p>
             </div>
             
-            <button class="btn-primary" onclick="login()">Entrar no Painel</button>
-            <div class="divider"><span>ou</span></div>
-            <button class="btn-outline" onclick="signup()">Criar nova conta</button>
+            <div class="auth-body">
+                <div class="input-field">
+                    <label>E-mail</label>
+                    <input type="email" id="email" placeholder="seu@email.com">
+                </div>
+                <div class="input-field">
+                    <label>Senha</label>
+                    <input type="password" id="password" placeholder="••••••••">
+                </div>
+                
+                <button class="btn-primary" onclick="login()">Entrar no Painel</button>
+                
+                <div class="divider"><span>ou entre com</span></div>
+                <button class="btn-google" onclick="loginGoogle()">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18"> Google
+                </button>
+
+                <div class="auth-switch">
+                    Não tem conta? <a href="#" onclick="toggleAuth(true)">Criar uma conta</a>
+                </div>
+            </div>
         </div>
-        
-        <div class="auth-footer">
-            <p>2026 &copy; Gerenciador de Performance</p>
-        </div>
+        <div class="auth-footer">2026 &copy; Gerenciador de Performance</div>
     </div>
-</div>
 
-<div class="main-container" id="app-content" style="display: none;">
-    <header class="dashboard-header">
-        <div class="header-left">
-            <h1 id="month-display">Janeiro 2026</h1>
-            <div class="user-info">
-                <span id="user-email"></span>
-                <button onclick="logout()" class="btn-logout">Sair</button>
+    <div id="signup-container" class="auth-overlay" style="display: none;">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">✔</div>
+                <h2>Criar Conta</h2>
+                <p>Comece a monitorar seus hábitos hoje</p>
             </div>
-            <div class="input-group">
-                <input type="text" id="habitInput" placeholder="Nova tarefa...">
-                <button onclick="adicionarHabito()">Adicionar</button>
+            
+            <div class="auth-body">
+                <div class="input-field">
+                    <label>Nome Completo</label>
+                    <input type="text" id="userName" placeholder="Como quer ser chamado?">
+                </div>
+                <div class="input-field">
+                    <label>E-mail</label>
+                    <input type="email" id="signup-email" placeholder="seu@email.com">
+                </div>
+                <div class="input-field">
+                    <label>Senha</label>
+                    <input type="password" id="signup-password" placeholder="Mínimo 6 caracteres">
+                </div>
+                
+                <button class="btn-primary" onclick="signup()">Finalizar Cadastro</button>
+
+                <div class="auth-switch">
+                    Já tem conta? <a href="#" onclick="toggleAuth(false)">Fazer Login</a>
+                </div>
             </div>
         </div>
-
-        <div class="header-right">
-            <div class="chart-container">
-                <canvas id="progressChart"></canvas>
-                <div id="percentage-label">0%</div>
-            </div>
-        </div>
-    </header>
-
-    <div class="table-wrapper">
-        <table id="habitTable">
-            <thead>
-                <tr id="header-row">
-                    <th class="sticky-col">Tarefa</th>
-                    </tr>
-            </thead>
-            <tbody id="habit-grid">
-                </tbody>
-        </table>
+        <div class="auth-footer">2026 &copy; Gerenciador de Performance</div>
     </div>
-</div>
 
-<script type="module" src="index.js"></script>
+    <div class="main-container" id="app-content" style="display: none;">
+        </div>
+
+    <script type="module" src="index.js"></script>
 </body>
-</html>
