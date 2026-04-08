@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Tracker Pro - Firebase Edition</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-200">
+
+<div id="auth-container" class="auth-overlay">
+    <div class="auth-box">
+        <h2>Bem-vindo ao seu Tracker</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Senha">
+        <div class="auth-buttons">
+            <button onclick="login()">Entrar</button>
+            <button onclick="signup()" class="btn-secondary">Criar Conta</button>
+        </div>
+    </div>
+</div>
+
+<div class="main-container" id="app-content" style="display: none;">
+    <header class="dashboard-header">
+        <div class="header-left">
+            <h1 id="month-display">Janeiro 2026</h1>
+            <div class="user-info">
+                <span id="user-email"></span>
+                <button onclick="logout()" class="btn-logout">Sair</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="habitInput" placeholder="Nova tarefa...">
+                <button onclick="adicionarHabito()">Adicionar</button>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <div class="chart-container">
+                <canvas id="progressChart"></canvas>
+                <div id="percentage-label">0%</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="table-wrapper">
+        <table id="habitTable">
+            <thead>
+                <tr id="header-row">
+                    <th class="sticky-col">Tarefa</th>
+                    </tr>
+            </thead>
+            <tbody id="habit-grid">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script type="module" src="index.js"></script>
+</body>
+</html>

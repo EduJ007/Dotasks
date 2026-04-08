@@ -1,0 +1,94 @@
+:root {
+    --primary: #1e293b;
+    --accent: #3b82f6;
+    --gray-200: #e5e7eb;
+}
+
+body.bg-gray-200 {
+    background-color: var(--gray-200);
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.main-container {
+    max-width: 1800px; /* Largura que você gostou */
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    background: white;
+    padding: 30px;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+/* Espaço vazio quando não tem tarefa */
+#habit-grid {
+    min-height: 400px; /* Garante que a tabela não fique pequena */
+    display: table-row-group;
+}
+
+#habit-grid:empty::after {
+    content: "Nenhuma tarefa adicionada. Comece agora!";
+    display: block;
+    padding: 100px;
+    text-align: center;
+    color: #94a3b8;
+    font-style: italic;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.table-wrapper {
+    background: white;
+    padding: 20px;
+    border-radius: 0 0 12px 12px;
+    overflow-x: auto;
+    min-height: 500px; /* Altura mínima da área da planilha */
+    position: relative;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #cbd5e1;
+    padding: 12px;
+    text-align: center;
+}
+
+.sticky-col {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 5;
+    min-width: 250px;
+    font-weight: bold;
+    text-align: left;
+}
+
+/* Auth Styles */
+.auth-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.auth-box {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
