@@ -1,21 +1,131 @@
- <!DOCTYPE html>
-
+<!DOCTYPE html>
 <html lang="pt-br">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>DoTasks</title>
-
-    <link rel="stylesheet" href="index.css">
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --accent: #3b82f6;
+            --gray-200: #e5e7eb;
+        }
 
+        body {
+            background-color: var(--gray-200);
+            margin: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        /* --- Estrutura Geral --- */
+        .main-container {
+            max-width: 1800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            background: white;
+            padding: 30px;
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .header-right { display: flex; align-items: center; }
+        .chart-container { position: relative; width: 120px; height: 120px; }
+
+        #percentage-label {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold; font-size: 1.2rem;
+        }
+
+        .user-info { margin-bottom: 10px; font-size: 0.9rem; color: #64748b; }
+        .btn-logout { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-left: 10px; }
+
+        .input-group { display: flex; gap: 10px; }
+        .input-group input { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; width: 250px; }
+        .input-group button { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+
+        .table-wrapper {
+            background: white; padding: 20px; border-radius: 0 0 12px 12px;
+            overflow-x: auto; min-height: 500px; position: relative;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: center; }
+        .sticky-col { position: sticky; left: 0; background: white; z-index: 5; min-width: 250px; font-weight: bold; text-align: left; }
+
+        /* --- Auth / Modais --- */
+        .auth-overlay {
+            position: fixed; inset: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(8px);
+        }
+
+        .auth-card {
+            background: white; width: 100%; max-width: 400px;
+            padding: 40px; border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .auth-header { text-align: center; margin-bottom: 30px; }
+        .auth-logo { background: #3b82f6; color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 15px; font-weight: bold; }
+        
+        .input-field { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .input-field label { font-size: 14px; font-weight: 600; color: #475569; }
+        .input-field input { padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; outline: none; }
+        
+        .btn-primary { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        
+        .btn-google {
+            width: 100%; padding: 12px; background: white; color: #444;
+            border: 2px solid #e2e8f0; border-radius: 10px; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s;
+        }
+
+        .divider { text-align: center; margin: 20px 0; border-top: 1px solid #e2e8f0; position: relative; }
+        .divider span { position: absolute; top: -10px; background: white; padding: 0 10px; left: 50%; transform: translateX(-50%); color: #94a3b8; font-size: 14px; }
+
+        .auth-switch { text-align: center; margin-top: 20px; font-size: 14px; color: #64748b; }
+        .auth-switch a { color: var(--accent); text-decoration: none; font-weight: bold; }
+
+        .auth-footer {
+            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            color: rgba(255, 255, 255, 0.7); font-size: 13px;
+        }
+
+        /* --- Alerta Personalizado --- */
+        #custom-alert {
+            position: fixed; top: 20px; left: 50%;
+            transform: translateX(-50%); z-index: 2000;
+            transition: all 0.3s ease;
+        }
+
+        .alert-hidden { visibility: hidden; opacity: 0; top: -100px !important; }
+
+        .alert-content {
+            background: white; padding: 15px 25px; border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid var(--accent); display: flex;
+            align-items: center; gap: 20px;
+        }
+
+        .alert-content button {
+            background: var(--accent); color: white; border: none;
+            padding: 5px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
-<body class="bg-gray-200">
+<body>
     <div id="custom-alert" class="alert-hidden">
         <div class="alert-content">
             <span id="alert-message"></span>
@@ -30,7 +140,6 @@
                 <h2>Bem-vindo de volta</h2>
                 <p>Acesse seu painel de performance</p>
             </div>
-            
             <div class="auth-body">
                 <div class="input-field">
                     <label>E-mail</label>
@@ -40,14 +149,11 @@
                     <label>Senha</label>
                     <input type="password" id="password" placeholder="••••••••">
                 </div>
-                
                 <button class="btn-primary" onclick="login()">Entrar no Painel</button>
-                
                 <div class="divider"><span>ou entre com</span></div>
                 <button class="btn-google" onclick="loginGoogle()">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="18"> Google
+                    <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="20" style="margin-right: 8px;">Google
                 </button>
-
                 <div class="auth-switch">
                     Não tem conta? <a href="#" onclick="toggleAuth(true)">Criar uma conta</a>
                 </div>
@@ -63,7 +169,6 @@
                 <h2>Criar Conta</h2>
                 <p>Comece a monitorar seus hábitos hoje</p>
             </div>
-            
             <div class="auth-body">
                 <div class="input-field">
                     <label>Nome Completo</label>
@@ -77,9 +182,7 @@
                     <label>Senha</label>
                     <input type="password" id="signup-password" placeholder="Mínimo 6 caracteres">
                 </div>
-                
                 <button class="btn-primary" onclick="signup()">Finalizar Cadastro</button>
-
                 <div class="auth-switch">
                     Já tem conta? <a href="#" onclick="toggleAuth(false)">Fazer Login</a>
                 </div>
@@ -89,7 +192,38 @@
     </div>
 
     <div class="main-container" id="app-content" style="display: none;">
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 id="month-display">Painel de Hábitos 2026</h1>
+                <div class="user-info">
+                    <span id="user-email"></span>
+                    <button onclick="logout()" class="btn-logout">Sair</button>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="habitInput" placeholder="Nova tarefa...">
+                    <button onclick="adicionarHabito()">Adicionar</button>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                    <div id="percentage-label">0%</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr id="header-row">
+                        <th class="sticky-col">Tarefa</th>
+                    </tr>
+                </thead>
+                <tbody id="habit-grid"></tbody>
+            </table>
         </div>
+    </div>
 
     <script type="module" src="index.js"></script>
 </body>
+</html>
