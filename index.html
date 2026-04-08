@@ -3,249 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DoTasks | Performance</title>
+    <title>DoTasks</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary: #0f172a;
+            --primary: #1e293b;
             --accent: #3b82f6;
-            --bg: #f8fafc;
-            --white: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
         }
 
         body {
-            background-color: var(--bg);
+            background-color: var(--gray-300);
             margin: 0;
-            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-            color: var(--text-main);
+            font-family: 'Segoe UI', system-ui, sans-serif;
         }
 
-        /* --- UI Geral --- */
-        .main-container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
-        
-        /* --- Top Bar Moderna --- */
-        .top-bar {
-            background: var(--white);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            margin-bottom: 25px;
+        /* --- Tela de Carregamento --- */
+        #loading-screen {
+            position: fixed; inset: 0;
+            background: #1e293b;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 5000; color: white;
         }
-
-        .user-profile-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            position: relative;
-            padding: 5px 10px;
-            border-radius: 12px;
-            transition: background 0.2s;
-        }
-
-        .user-profile-area:hover { background: #f1f5f9; }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
+        .spinner {
+            width: 50px; height: 50px;
+            border: 5px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent);
             border-radius: 50%;
-            background: var(--accent);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            object-fit: cover;
-            border: 2px solid #e2e8f0;
-        }
-
-        /* --- Dashboard Header --- */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 20px;
+            animation: spin 1s linear infinite;
             margin-bottom: 20px;
         }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .card {
-            background: var(--white);
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        /* --- Estrutura Geral --- */
+        .main-container {
+            max-width: 1800px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
 
-        .header-controls {
+        .dashboard-header {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
+            justify-content: space-between;
+            background: white;
+            padding: 30px;
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border-bottom: 2px solid var(--gray-200);
         }
 
-        .input-group {
-            display: flex;
-            gap: 10px;
-            background: #f1f5f9;
-            padding: 8px;
-            border-radius: 12px;
+        .header-right { display: flex; align-items: center; }
+        .chart-container { position: relative; width: 120px; height: 120px; }
+
+        #percentage-label {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: bold; font-size: 1.2rem;
         }
 
-        .input-group input {
-            flex: 1;
-            border: none;
-            background: transparent;
-            padding: 10px;
-            outline: none;
-            font-size: 1rem;
-        }
-
-        .input-group button {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+        /* --- Perfil e Avatar --- */
+        .user-info { margin-bottom: 15px; position: relative; }
+        #user-avatar {
+            width: 45px; height: 45px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; color: white;
             cursor: pointer;
-            font-weight: 600;
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.2s;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #user-avatar:hover { transform: scale(1.1); }
+
+        .btn-logout { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+
+        /* --- Área de Input --- */
+        .input-group { 
+            display: flex; gap: 8px; 
+            background: #f8fafc; padding: 10px;
+            border-radius: 8px; border: 1px solid var(--gray-200);
+        }
+        .input-group input { 
+            padding: 10px; border: 1px solid #cbd5e1; 
+            border-radius: 6px; width: 250px; outline: none;
+        }
+        .input-group button { 
+            background: var(--accent); color: white; border: none; 
+            width: 40px; height: 40px; border-radius: 6px; 
+            cursor: pointer; font-size: 20px;
         }
 
-        /* --- Tabela --- */
         .table-wrapper {
-            background: var(--white);
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            background: white; padding: 20px; border-radius: 0 0 12px 12px;
+            overflow-x: auto; min-height: 500px;
         }
 
         table { width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc; color: var(--text-muted); font-size: 12px; text-transform: uppercase; padding: 15px; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; text-align: center; }
-        
-        .sticky-col { 
-            position: sticky; left: 0; background: white; 
-            z-index: 5; min-width: 200px; text-align: left; 
-            font-weight: 600; padding-left: 25px;
-        }
+        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: center; }
+        .sticky-col { position: sticky; left: 0; background: white; z-index: 5; min-width: 200px; font-weight: bold; text-align: left; }
 
-        /* --- Checkbox Custom --- */
-        input[type="checkbox"] {
-            width: 20px; height: 20px; cursor: pointer;
-            accent-color: var(--accent);
-        }
-
-        /* --- Modais de Auth (Mantidos e Melhorados) --- */
+        /* --- Auth Modals --- */
         .auth-overlay {
             position: fixed; inset: 0;
-            background: #0f172a;
-            display: flex; align-items: center; justify-content: center;
-            z-index: 1000;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 1000; backdrop-filter: blur(8px);
         }
+        .auth-card { background: white; width: 90%; max-width: 400px; padding: 40px; border-radius: 20px; }
+        .input-field { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
+        .input-field input { padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; }
+        .btn-primary { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .btn-google { width: 100%; padding: 12px; background: white; border: 2px solid #e2e8f0; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;}
 
-        .auth-card {
-            background: white; width: 90%; max-width: 400px;
-            padding: 40px; border-radius: 24px;
-        }
+        /* --- Alerta --- */
+        #custom-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 6000; transition: all 0.3s ease; }
+        .alert-hidden { visibility: hidden; opacity: 0; top: -100px !important; }
+        .alert-content { background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); border-left: 5px solid var(--accent); display: flex; align-items: center; gap: 15px; }
 
-        /* Estilos do Dropdown de Perfil */
-        .profile-menu {
-            position: absolute; top: 60px; right: 0;
-            background: white; border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-            width: 200px; display: none; flex-direction: column;
-            overflow: hidden; z-index: 100;
-        }
-
-        .profile-menu button {
-            padding: 12px 20px; border: none; background: white;
-            text-align: left; cursor: pointer; font-size: 14px;
-        }
-
-        .profile-menu button:hover { background: #f1f5f9; }
-        .btn-logout-menu { color: #ef4444; border-top: 1px solid #f1f5f9 !important; }
-
-        #custom-alert {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 3000; transition: 0.3s;
-        }
-        .alert-hidden { opacity: 0; visibility: hidden; transform: translate(-50%, -20px); }
-        .alert-content { background: #1e293b; color: white; padding: 12px 24px; border-radius: 50px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <p>Verificando credenciais...</p>
+    </div>
 
     <div id="custom-alert" class="alert-hidden">
         <div class="alert-content">
             <span id="alert-message"></span>
+            <button onclick="closeAlert()" style="background:var(--accent); color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">OK</button>
         </div>
     </div>
 
-    <div id="auth-container" class="auth-overlay">
+    <div id="auth-container" class="auth-overlay" style="display: none;">
         <div class="auth-card">
-            <div class="auth-header" style="text-align: center; margin-bottom: 20px;">
-                <div style="font-size: 40px;">🎯</div>
-                <h2>Fazer Login</h2>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="background: #3b82f6; color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 10px;">✔</div>
+                <h2>Login</h2>
             </div>
             <div class="input-field">
-                <label>E-mail</label><br>
-                <input type="email" id="email" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-            </div><br>
+                <label>E-mail</label>
+                <input type="email" id="email" placeholder="seu@email.com">
+            </div>
             <div class="input-field">
-                <label>Senha</label><br>
-                <input type="password" id="password" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
-            </div><br>
-            <button class="btn-primary" onclick="login()" style="width:100%; padding:12px; background:#3b82f6; color:white; border:none; border-radius:8px; cursor:pointer;">Entrar</button>
-            <button onclick="loginGoogle()" style="width:100%; margin-top:10px; padding:12px; background:white; border:1px solid #ddd; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:10px;">
-                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="18"> Google
+                <label>Senha</label>
+                <input type="password" id="password" placeholder="••••••••">
+            </div>
+            <button class="btn-primary" onclick="login()">Entrar</button>
+            <button class="btn-google" onclick="loginGoogle()">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="20"> Google
             </button>
-            <p style="text-align:center; font-size:14px;">Não tem conta? <a href="#" onclick="toggleAuth(true)">Criar conta</a></p>
+            <p style="text-align:center; font-size: 14px; margin-top: 15px;">Não tem conta? <a href="#" onclick="toggleAuth(true)">Criar</a></p>
         </div>
     </div>
 
     <div id="signup-container" class="auth-overlay" style="display: none;">
         <div class="auth-card">
             <h2>Criar Conta</h2>
-            <input type="text" id="userName" placeholder="Nome" style="width:100%; padding:10px; margin-bottom:10px;">
-            <input type="email" id="signup-email" placeholder="E-mail" style="width:100%; padding:10px; margin-bottom:10px;">
-            <input type="password" id="signup-password" placeholder="Senha" style="width:100%; padding:10px; margin-bottom:10px;">
-            <button class="btn-primary" onclick="signup()" style="width:100%; padding:12px; background:#3b82f6; color:white; border:none; border-radius:8px;">Cadastrar</button>
-            <p style="text-align:center;"><a href="#" onclick="toggleAuth(false)">Já tenho conta</a></p>
+            <div class="input-field">
+                <label>Nome</label>
+                <input type="text" id="userName" placeholder="Seu nome">
+            </div>
+            <div class="input-field">
+                <label>E-mail</label>
+                <input type="email" id="signup-email" placeholder="seu@email.com">
+            </div>
+            <div class="input-field">
+                <label>Senha</label>
+                <input type="password" id="signup-password" placeholder="Mínimo 6 dígitos">
+            </div>
+            <button class="btn-primary" onclick="signup()">Cadastrar</button>
+            <p style="text-align:center; font-size: 14px; margin-top: 15px;">Já tem conta? <a href="#" onclick="toggleAuth(false)">Login</a></p>
         </div>
     </div>
 
     <div class="main-container" id="app-content" style="display: none;">
-        <nav class="top-bar">
-            <div style="font-weight: 800; font-size: 1.5rem; color: var(--primary);">DoTasks</div>
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1 style="margin: 0 0 15px 0;">DoTasks 2026</h1>
+                <div class="user-info">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div id="user-avatar" onclick="abrirConfigPerfil()"></div>
+                        <div>
+                            <span id="user-email-display" style="font-weight: 600; display: block;"></span>
+                            <button onclick="logout()" class="btn-logout">Sair</button>
+                        </div>
+                    </div>
+
+                    <div id="edit-profile" style="display:none; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); margin-top: 15px; border: 1px solid #eee; position: absolute; z-index: 100;">
+                        <label style="font-size: 12px; font-weight: bold; color: #64748b;">URL DA FOTO:</label><br>
+                        <input type="text" id="new-photo-url" placeholder="http://..." style="padding: 8px; margin: 8px 0; width: 220px; border: 1px solid #ddd; border-radius: 6px;"><br>
+                        <button onclick="salvarFoto()" style="background: var(--accent); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; width: 100%;">Atualizar Foto</button>
+                    </div>
+                </div>
+
+                <div class="input-group" style="margin-top: 20px;">
+                    <input type="text" id="habitInput" placeholder="Nova tarefa...">
+                    <button onclick="adicionarHabito()">+</button>
+                </div>
+            </div>
             
-            <div class="user-profile-area" onclick="toggleProfileMenu()">
-                <div id="user-display-name" style="font-weight: 600;">Carregando...</div>
-                <img id="user-photo" class="user-avatar" src="" alt="👤">
-                
-                <div class="profile-menu" id="profile-menu">
-                    <button onclick="changeName()">Alterar Nome</button>
-                    <button class="btn-logout-menu" onclick="logout()">Sair da Conta</button>
-                </div>
-            </div>
-        </nav>
-
-        <div class="dashboard-grid">
-            <div class="card">
-                <h3>Minhas Tarefas do Mês</h3>
-                <div class="input-group">
-                    <input type="text" id="habitInput" placeholder="O que vamos focar hoje?">
-                    <button onclick="adicionarHabito()">Adicionar</button>
-                </div>
-            </div>
-
-            <div class="card" style="display: flex; align-items: center; justify-content: center; padding: 15px;">
+            <div class="header-right">
                 <div class="chart-container">
                     <canvas id="progressChart"></canvas>
                     <div id="percentage-label">0%</div>
                 </div>
             </div>
-        </div>
+        </header>
 
         <div class="table-wrapper">
             <table>

@@ -20,70 +20,87 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
-// --- UI HELPERS ---
+// --- HELPERS ---
 window.showAlert = (msg) => {
     const alertBox = document.getElementById('custom-alert');
     document.getElementById('alert-message').innerText = msg;
     alertBox.classList.remove('alert-hidden');
-    setTimeout(() => alertBox.classList.add('alert-hidden'), 3000);
+    setTimeout(() => alertBox.classList.add('alert-hidden'), 4000);
 };
-
+window.closeAlert = () => document.getElementById('custom-alert').classList.add('alert-hidden');
 window.toggleAuth = (isSignup) => {
     document.getElementById('auth-container').style.display = isSignup ? 'none' : 'flex';
     document.getElementById('signup-container').style.display = isSignup ? 'flex' : 'none';
 };
 
-window.toggleProfileMenu = () => {
-    const menu = document.getElementById('profile-menu');
-    menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+// --- PERFIL E AVATAR ---
+function getCorPorLetra(letra) {
+    const cores = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+    const indice = letra ? letra.toUpperCase().charCodeAt(0) % cores.length : 0;
+    return cores[indice];
+}
+
+function renderizarAvatar(user) {
+    const avatar = document.getElementById('user-avatar');
+    const nome = user.displayName || user.email || "U";
+    const inicial = nome.charAt(0).toUpperCase();
+
+    if (user.photoURL) {
+        avatar.style.backgroundImage = `url('${user.photoURL}')`;
+        avatar.innerText = "";
+        avatar.style.backgroundColor = "transparent";
+    } else {
+        avatar.style.backgroundImage = "none";
+        avatar.innerText = inicial;
+        avatar.style.backgroundColor = getCorPorLetra(inicial);
+    }
+}
+
+window.abrirConfigPerfil = () => {
+    const box = document.getElementById('edit-profile');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
 };
 
-// --- AUTH ---
-window.login = async () => {
+window.salvarFoto = async () => {
+    const url = document.getElementById('new-photo-url').value;
+    if (!url) return showAlert("Insira um link!");
+    try {
+        await updateProfile(auth.currentUser, { photoURL: url });
+        renderizarAvatar(auth.currentUser);
+        showAlert("Foto atualizada!");
+        abrirConfigPerfil();
+    } catch (err) { showAlert("Erro ao salvar foto."); }
+};
+
+// --- AUTH LOGIC ---
+window.login = () => {
     const e = document.getElementById('email').value;
     const p = document.getElementById('password').value;
-    try {
-        await signInWithEmailAndPassword(auth, e, p);
-    } catch (err) { showAlert("Dados inválidos!"); }
+    signInWithEmailAndPassword(auth, e, p).catch(() => showAlert("Erro no login!"));
 };
 
-window.loginGoogle = async () => {
-    try {
-        await signInWithPopup(auth, googleProvider);
-    } catch (err) { showAlert("Erro no login Google"); }
-};
+window.loginGoogle = () => signInWithPopup(auth, googleProvider);
 
 window.signup = async () => {
     const nome = document.getElementById('userName').value;
     const e = document.getElementById('signup-email').value;
     const p = document.getElementById('signup-password').value;
-    if(!nome) return showAlert("Insira seu nome!");
     try {
         const res = await createUserWithEmailAndPassword(auth, e, p);
         await updateProfile(res.user, { displayName: nome });
-        location.reload(); 
-    } catch (err) { showAlert("Erro ao criar conta"); }
+        location.reload();
+    } catch (err) { showAlert("Erro ao criar conta!"); }
 };
 
 window.logout = () => signOut(auth);
 
-window.changeName = async () => {
-    const novoNome = prompt("Digite seu novo nome:");
-    if(novoNome && auth.currentUser) {
-        await updateProfile(auth.currentUser, { displayName: novoNome });
-        document.getElementById('user-display-name').innerText = novoNome;
-        showAlert("Nome atualizado!");
-    }
-};
-
-// --- CORE APP ---
-const agora = new Date();
-const diaHoje = agora.getDate();
-const diasNoMes = new Date(agora.getFullYear(), agora.getMonth() + 1, 0).getDate();
-
+// --- DASHBOARD LOGIC ---
+const diasNoMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
 let progressChart;
+
 function initChart() {
     const ctx = document.getElementById('progressChart').getContext('2d');
+    if(progressChart) progressChart.destroy();
     progressChart = new Chart(ctx, {
         type: 'doughnut',
         data: { datasets: [{ data: [0, 100], backgroundColor: ['#3b82f6', '#f1f5f9'], borderWidth: 0 }] },
@@ -91,32 +108,35 @@ function initChart() {
     });
 }
 
+// ÚNICO Observador de Autenticação
 onAuthStateChanged(auth, (user) => {
-    if (user) {
-        document.getElementById('auth-container').style.display = 'none';
-        document.getElementById('signup-container').style.display = 'none';
-        document.getElementById('app-content').style.display = 'block';
-        
-        // Perfil UI
-        document.getElementById('user-display-name').innerText = user.displayName || "Usuário";
-        const photoEl = document.getElementById('user-photo');
-        if(user.photoURL) photoEl.src = user.photoURL;
-        else photoEl.style.display = 'none'; // Mostra o background colorido se não tiver foto
+    const appBox = document.getElementById('app-content');
+    const authBox = document.getElementById('auth-container');
+    const signupBox = document.getElementById('signup-container');
+    
+    // Splash Screen: some após 5s independente de tudo
+    setTimeout(() => {
+        document.getElementById('loading-screen').style.display = 'none';
+    }, 5000);
 
+    if (user) {
+        authBox.style.display = 'none';
+        signupBox.style.display = 'none';
+        appBox.style.display = 'block';
+        document.getElementById('user-email-display').innerText = user.displayName || user.email;
+        renderizarAvatar(user);
         initChart();
         carregarHabitos(user.uid);
     } else {
-        document.getElementById('auth-container').style.display = 'flex';
-        document.getElementById('app-content').style.display = 'none';
+        authBox.style.display = 'flex';
+        appBox.style.display = 'none';
     }
 });
 
-// (Mantenha as funções carregarHabitos, renderizarTabela e atualizarProgresso que já tínhamos)
-// Adicionei apenas o listener de clique para salvar no banco
-
+// --- CORE FUNCTIONS ---
 window.adicionarHabito = async () => {
     const nome = document.getElementById('habitInput').value;
-    if (!nome || !auth.currentUser) return;
+    if (!nome) return;
     const habitRef = doc(collection(db, "users", auth.currentUser.uid, "habits"), nome);
     await setDoc(habitRef, { nome, checks: {} });
     document.getElementById('habitInput').value = "";
@@ -124,21 +144,22 @@ window.adicionarHabito = async () => {
 
 function carregarHabitos(uid) {
     onSnapshot(collection(db, "users", uid, "habits"), (snap) => {
-        const habitos = snap.docs.map(d => d.data());
-        renderizarTabela(habitos);
+        renderizarTabela(snap.docs.map(d => d.data()));
     });
 }
 
 function renderizarTabela(habitos) {
     const grid = document.getElementById('habit-grid');
     const head = document.getElementById('header-row');
+    const diaHoje = new Date().getDate();
+    
     grid.innerHTML = "";
     head.innerHTML = '<th class="sticky-col">Tarefa</th>';
 
     for (let i = 1; i <= diasNoMes; i++) {
         const th = document.createElement('th');
         th.innerText = i;
-        if (i === diaHoje) th.style.color = "#3b82f6";
+        if(i === diaHoje) th.style.background = "#dbeafe";
         head.appendChild(th);
     }
 
