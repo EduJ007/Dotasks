@@ -17,35 +17,36 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // Funções de Autenticação com Try/Catch detalhado
+// FORÇAR AS FUNÇÕES PARA O ESCOPO GLOBAL
 window.login = async () => {
     const e = document.getElementById('email').value;
     const p = document.getElementById('password').value;
-    if(!e || !p) return alert("Por favor, preencha todos os campos.");
+    console.log("Tentando logar..."); // Veja se isso aparece no F12
     try {
         await signInWithEmailAndPassword(auth, e, p);
     } catch (err) {
-        console.error("Erro Login:", err.code);
-        alert("Erro ao entrar: " + err.message);
+        alert("Erro no Login: " + err.message);
     }
 };
 
 window.signup = async () => {
     const e = document.getElementById('email').value;
     const p = document.getElementById('password').value;
-    if(!e || !p) return alert("Preencha e-mail e senha para criar sua conta.");
     
-    console.log("Tentando criar conta para:", e); // Log de teste
+    console.log("Botão de cadastro clicado!"); // Isso TEM que aparecer no F12
+    
+    if(!e || !p) {
+        alert("Preencha os campos!");
+        return;
+    }
 
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, e, p);
-        console.log("Conta criada!", userCredential.user);
-        alert("Conta criada com sucesso! Você já está logado.");
+        const res = await createUserWithEmailAndPassword(auth, e, p);
+        console.log("Sucesso:", res.user);
+        alert("Conta criada!");
     } catch (err) {
-        console.error("Erro no Firebase Signup:", err.code, err.message);
-        // Tratamento de erros comuns
-        if (err.code === 'auth/email-already-in-use') alert("Este e-mail já está em uso.");
-        else if (err.code === 'auth/weak-password') alert("A senha deve ter pelo menos 6 caracteres.");
-        else alert("Erro ao cadastrar: " + err.message);
+        console.error("Erro detalhado:", err);
+        alert("Erro no Cadastro: " + err.message);
     }
 };
 
