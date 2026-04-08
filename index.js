@@ -1,6 +1,19 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { 
+    getAuth, 
+    onAuthStateChanged, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, 
+    signOut, 
+    updateProfile 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { 
+    getFirestore, 
+    doc, 
+    setDoc, 
+    collection, 
+    onSnapshot 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDf8zO40aWn8r3eyibyOuLz4FMXXaDdkk4",
@@ -16,43 +29,70 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Funções de Autenticação com Try/Catch detalhado
-// FORÇAR AS FUNÇÕES PARA O ESCOPO GLOBAL
+// --- FUNÇÕES DE ALERTA PERSONALIZADO ---
+window.showAlert = (msg) => {
+    const alertBox = document.getElementById('custom-alert');
+    document.getElementById('alert-message').innerText = msg;
+    alertBox.classList.remove('alert-hidden');
+    setTimeout(window.closeAlert, 4000);
+};
+
+window.closeAlert = () => {
+    document.getElementById('custom-alert').classList.add('alert-hidden');
+};
+
+// --- FUNÇÕES DE AUTENTICAÇÃO ---
 window.login = async () => {
     const e = document.getElementById('email').value;
     const p = document.getElementById('password').value;
-    console.log("Tentando logar..."); // Veja se isso aparece no F12
+    if(!e || !p) return showAlert("Preencha e-mail e senha!");
     try {
         await signInWithEmailAndPassword(auth, e, p);
     } catch (err) {
-        alert("Erro no Login: " + err.message);
+        showAlert("Erro no Login: " + err.message);
     }
 };
 
 window.signup = async () => {
+    const nome = document.getElementById('userName').value;
     const e = document.getElementById('email').value;
     const p = document.getElementById('password').value;
-    
-    console.log("Botão de cadastro clicado!"); // Isso TEM que aparecer no F12
-    
-    if(!e || !p) {
-        alert("Preencha os campos!");
+
+    if(!nome || !e || !p) {
+        showAlert("Preencha todos os campos, inclusive seu nome!");
         return;
     }
 
     try {
-        const res = await createUserWithEmailAndPassword(auth, e, p);
-        console.log("Sucesso:", res.user);
-        alert("Conta criada!");
+        const userCredential = await createUserWithEmailAndPassword(auth, e, p);
+        // Salva o nome do usuário no perfil do Firebase
+        await updateProfile(userCredential.user, { displayName: nome });
+        showAlert("Conta criada com sucesso, " + nome + "!");
     } catch (err) {
-        console.error("Erro detalhado:", err);
-        alert("Erro no Cadastro: " + err.message);
+        showAlert("Erro no Cadastro: " + err.message);
     }
 };
 
 window.logout = () => signOut(auth);
 
-// --- Lógica do App ---
+// --- CONTROLE DE ESTADO (LOGIN/LOGOUT) ---
+onAuthStateChanged(auth, (user) => {
+    const authBox = document.getElementById('auth-container');
+    const appBox = document.getElementById('app-content');
+    
+    if (user) {
+        authBox.style.display = 'none';
+        appBox.style.display = 'block';
+        // Mostra o Nome (displayName) ou o e-mail caso o nome falhe
+        document.getElementById('user-email').innerText = "Olá, " + (user.displayName || user.email);
+        carregarHabitos(user.uid);
+    } else {
+        authBox.style.display = 'flex';
+        appBox.style.display = 'none';
+    }
+});
+
+// --- LÓGICA DO APP (PLANILHA E GRÁFICO) ---
 const agora = new Date();
 const diaHoje = agora.getDate();
 const mesAtual = agora.getMonth();
@@ -123,19 +163,5 @@ function atualizarProgresso() {
     const porcento = checks.length > 0 ? Math.round((marcados / checks.length) * 100) : 0;
     progressChart.data.datasets[0].data = [porcento, 100 - porcento];
     progressChart.update();
-    document.getElementById('percentage-label').innerText = `${porcento}%`;
+    document.getElementById('percentage-label').innerText = porcento + "%";
 }
-
-onAuthStateChanged(auth, (user) => {
-    const authBox = document.getElementById('auth-container');
-    const appBox = document.getElementById('app-content');
-    if (user) {
-        authBox.style.display = 'none';
-        appBox.style.display = 'block';
-        document.getElementById('user-email').innerText = user.email;
-        carregarHabitos(user.uid);
-    } else {
-        authBox.style.display = 'flex';
-        appBox.style.display = 'none';
-    }
-});

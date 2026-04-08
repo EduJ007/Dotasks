@@ -8,7 +8,23 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-200">
+<div id="custom-alert" class="alert-hidden">
+    <div class="alert-content">
+        <span id="alert-message"></span>
+        <button onclick="closeAlert()">OK</button>
+    </div>
+</div>
 
+<div class="auth-body">
+    <div class="input-field">
+        <label>Nome Completo</label>
+        <input type="text" id="userName" placeholder="Como quer ser chamado?">
+    </div>
+    <div class="input-field">
+        <label>E-mail</label>
+        <input type="email" id="email" placeholder="seu@email.com">
+    </div>
+    </div>
 <div id="auth-container" class="auth-overlay">
     <div class="auth-card">
         <div class="auth-header">
