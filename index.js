@@ -133,6 +133,27 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
+function initChart() {
+    const ctx = document.getElementById('progressChart').getContext('2d');
+    if(progressChart) progressChart.destroy();
+    progressChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: { 
+            datasets: [{ 
+                data: [0, 100], 
+                backgroundColor: ['#00d4ff', 'rgba(0, 212, 255, 0.1)'], // AZUL NEON E FUNDO TRANSPARENTE
+                borderWidth: 0,
+                hoverOffset: 0
+            }] 
+        },
+        options: { 
+            cutout: '85%', 
+            plugins: { tooltip: { enabled: false } },
+            animation: { animateRotate: true }
+        }
+    });
+}
+
 // --- CORE FUNCTIONS ---
 window.adicionarHabito = async () => {
     const nome = document.getElementById('habitInput').value;

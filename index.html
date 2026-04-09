@@ -3,209 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DoTasks</title>
+    <title>Solo Leveling | Quest Log</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1e293b;
-            --accent: #3b82f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
+            --sl-blue: #00d4ff;
+            --sl-dark-blue: #0a192f;
+            --sl-purple: #7000ff;
+            --sl-black: #020617;
+            --sl-border: rgba(0, 212, 255, 0.3);
+            --bg-gradient: linear-gradient(180deg, #020617 0%, #0a192f 100%);
         }
 
         body {
-            background-color: var(--gray-300);
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: #e2e8f0;
             margin: 0;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Rajdhani', sans-serif;
+            text-transform: uppercase;
         }
 
-        /* --- Tela de Carregamento --- */
+        /* --- Custom Scrollbar --- */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--sl-black); }
+        ::-webkit-scrollbar-thumb { background: var(--sl-blue); border-radius: 4px; }
+
+        /* --- Loading Screen (Monarch Style) --- */
         #loading-screen {
             position: fixed; inset: 0;
-            background: #1e293b;
+            background: var(--sl-black);
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            z-index: 5000; color: white;
+            z-index: 5000;
         }
         .spinner {
-            width: 50px; height: 50px;
-            border: 5px solid rgba(255,255,255,0.1);
-            border-top-color: var(--accent);
+            width: 60px; height: 60px;
+            border: 3px solid transparent;
+            border-top-color: var(--sl-blue);
+            border-bottom-color: var(--sl-purple);
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            animation: spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* --- Estrutura Geral --- */
-        .main-container {
-            max-width: 1800px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
+        /* --- Dashboard UI --- */
+        .main-container { max-width: 1400px; margin: 40px auto; padding: 0 20px; }
 
         .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            background: white;
+            display: flex; justify-content: space-between;
+            background: rgba(10, 25, 47, 0.8);
             padding: 30px;
-            border-radius: 12px 12px 0 0;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            border-bottom: 2px solid var(--gray-200);
+            border-radius: 2px;
+            border: 2px solid var(--sl-blue);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+            backdrop-filter: blur(10px);
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 95% 100%, 0 100%);
         }
 
-        .header-right { display: flex; align-items: center; }
-        .chart-container { position: relative; width: 120px; height: 120px; }
+        h1 { font-family: 'Orbitron', sans-serif; color: var(--sl-blue); letter-spacing: 4px; margin: 0; text-shadow: 0 0 10px var(--sl-blue); }
 
-        #percentage-label {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: bold; font-size: 1.2rem;
-        }
-
-        /* --- Perfil e Avatar --- */
-        .user-info { margin-bottom: 15px; position: relative; }
+        /* --- Avatar SL Style --- */
         #user-avatar {
-            width: 45px; height: 45px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; color: white;
-            cursor: pointer;
-            background-size: cover;
-            background-position: center;
-            transition: transform 0.2s;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 50px; height: 50px;
+            border: 2px solid var(--sl-blue);
+            box-shadow: 0 0 15px var(--sl-blue);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 20px;
+            background-color: var(--sl-black) !important;
         }
-        #user-avatar:hover { transform: scale(1.1); }
 
-        .btn-logout { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
-
-        /* --- Área de Input --- */
-        .input-group { 
-            display: flex; gap: 8px; 
-            background: #f8fafc; padding: 10px;
-            border-radius: 8px; border: 1px solid var(--gray-200);
+        .btn-logout { 
+            background: transparent; color: #ff4d4d; border: 1px solid #ff4d4d; 
+            padding: 4px 10px; cursor: pointer; font-weight: bold;
+            transition: 0.3s;
         }
+        .btn-logout:hover { background: #ff4d4d; color: white; }
+
+        /* --- Inputs e Botões --- */
+        .input-group { background: transparent; border: none; padding: 0; }
         .input-group input { 
-            padding: 10px; border: 1px solid #cbd5e1; 
-            border-radius: 6px; width: 250px; outline: none;
+            background: rgba(2, 6, 23, 0.8); border: 1px solid var(--sl-blue); 
+            color: white; padding: 12px; font-family: 'Rajdhani'; font-size: 1.1rem;
         }
         .input-group button { 
-            background: var(--accent); color: white; border: none; 
-            width: 40px; height: 40px; border-radius: 6px; 
-            cursor: pointer; font-size: 20px;
+            background: var(--sl-blue); color: var(--sl-black); 
+            font-weight: bold; border: none; transition: 0.3s;
         }
+        .input-group button:hover { background: white; box-shadow: 0 0 20px white; }
 
+        /* --- Tabela de Quests --- */
         .table-wrapper {
-            background: white; padding: 20px; border-radius: 0 0 12px 12px;
-            overflow-x: auto; min-height: 500px;
+            background: rgba(2, 6, 23, 0.6);
+            margin-top: 20px; padding: 20px; border: 1px solid var(--sl-border);
+        }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 5px; }
+        th { color: var(--sl-blue); font-family: 'Orbitron'; font-size: 0.8rem; padding: 15px; }
+        td { background: rgba(10, 25, 47, 0.5); border-top: 1px solid var(--sl-border); border-bottom: 1px solid var(--sl-border); padding: 12px; }
+        .sticky-col { background: var(--sl-dark-blue) !important; color: white; border-left: 3px solid var(--sl-blue); }
+
+        /* --- Checkbox SL Style --- */
+        input[type="checkbox"] {
+            appearance: none; width: 18px; height: 18px; border: 1px solid var(--sl-blue);
+            cursor: pointer; position: relative;
+        }
+        input[type="checkbox"]:checked { background: var(--sl-blue); box-shadow: 0 0 10px var(--sl-blue); }
+        input[type="checkbox"]:checked::after { content: '✔'; position: absolute; color: black; font-size: 14px; left: 2px; top: -2px; }
+
+        /* --- Gráfico --- */
+        #percentage-label { font-family: 'Orbitron'; color: var(--sl-blue); text-shadow: 0 0 10px var(--sl-blue); }
+
+        /* --- Auth Card SL --- */
+        .auth-card { 
+            background: var(--sl-black); border: 2px solid var(--sl-blue); 
+            color: white; box-shadow: 0 0 40px rgba(0, 212, 255, 0.2);
+            clip-path: polygon(10% 0, 100% 0, 100% 90%, 90% 100%, 0 100%, 0 10%);
+        }
+        .btn-primary { 
+            background: var(--sl-blue); color: black; font-family: 'Orbitron'; 
+            letter-spacing: 2px; border-radius: 0;
         }
 
-        table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: center; }
-        .sticky-col { position: sticky; left: 0; background: white; z-index: 5; min-width: 200px; font-weight: bold; text-align: left; }
-
-        /* --- Auth Modals --- */
-        .auth-overlay {
-            position: fixed; inset: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            z-index: 1000; backdrop-filter: blur(8px);
-        }
-        .auth-card { background: white; width: 90%; max-width: 400px; padding: 40px; border-radius: 20px; }
-        .input-field { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
-        .input-field input { padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; }
-        .btn-primary { width: 100%; padding: 14px; background: #3b82f6; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .btn-google { width: 100%; padding: 12px; background: white; border: 2px solid #e2e8f0; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;}
-
-        /* --- Alerta --- */
-        #custom-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 6000; transition: all 0.3s ease; }
-        .alert-hidden { visibility: hidden; opacity: 0; top: -100px !important; }
-        .alert-content { background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); border-left: 5px solid var(--accent); display: flex; align-items: center; gap: 15px; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #edit-profile { background: var(--sl-black); border: 1px solid var(--sl-blue); color: white; }
     </style>
 </head>
 <body>
     <div id="loading-screen">
         <div class="spinner"></div>
-        <p>Verificando credenciais...</p>
+        <p style="font-family: 'Orbitron'; letter-spacing: 3px; color: var(--sl-blue);">ACCESSING SYSTEM...</p>
     </div>
 
     <div id="custom-alert" class="alert-hidden">
-        <div class="alert-content">
+        <div class="alert-content" style="background: var(--sl-black); border: 1px solid var(--sl-blue); color: white;">
             <span id="alert-message"></span>
-            <button onclick="closeAlert()" style="background:var(--accent); color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">OK</button>
+            <button onclick="closeAlert()" style="background:var(--sl-blue); color:black; border:none; padding:5px 10px; cursor:pointer; font-weight:bold;">CONFIRM</button>
         </div>
     </div>
 
     <div id="auth-container" class="auth-overlay" style="display: none;">
         <div class="auth-card">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <div style="background: #3b82f6; color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 10px;">✔</div>
-                <h2>Login</h2>
-            </div>
-            <div class="input-field">
-                <label>E-mail</label>
-                <input type="email" id="email" placeholder="seu@email.com">
-            </div>
-            <div class="input-field">
-                <label>Senha</label>
-                <input type="password" id="password" placeholder="••••••••">
-            </div>
-            <button class="btn-primary" onclick="login()">Entrar</button>
-            <button class="btn-google" onclick="loginGoogle()">
-                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="20"> Google
-            </button>
-            <p style="text-align:center; font-size: 14px; margin-top: 15px;">Não tem conta? <a href="#" onclick="toggleAuth(true)">Criar</a></p>
-        </div>
-    </div>
-
-    <div id="signup-container" class="auth-overlay" style="display: none;">
-        <div class="auth-card">
-            <h2>Criar Conta</h2>
-            <div class="input-field">
-                <label>Nome</label>
-                <input type="text" id="userName" placeholder="Seu nome">
-            </div>
-            <div class="input-field">
-                <label>E-mail</label>
-                <input type="email" id="signup-email" placeholder="seu@email.com">
-            </div>
-            <div class="input-field">
-                <label>Senha</label>
-                <input type="password" id="signup-password" placeholder="Mínimo 6 dígitos">
-            </div>
-            <button class="btn-primary" onclick="signup()">Cadastrar</button>
-            <p style="text-align:center; font-size: 14px; margin-top: 15px;">Já tem conta? <a href="#" onclick="toggleAuth(false)">Login</a></p>
+            <h2 style="font-family: 'Orbitron'; color: var(--sl-blue); text-align: center;">USER AUTHENTICATION</h2>
+            <div class="input-field"><input type="email" id="email" placeholder="E-MAIL"></div>
+            <div class="input-field"><input type="password" id="password" placeholder="PASSWORD"></div>
+            <button class="btn-primary" onclick="login()">LOG IN</button>
+            <button class="btn-google" onclick="loginGoogle()" style="background: white; color: black;">GOOGLE SYNC</button>
+            <p style="text-align:center;">NEW PLAYER? <a href="#" onclick="toggleAuth(true)" style="color: var(--sl-blue);">REGISTER</a></p>
         </div>
     </div>
 
     <div class="main-container" id="app-content" style="display: none;">
         <header class="dashboard-header">
             <div class="header-left">
-                <h1 style="margin: 0 0 15px 0;">DoTasks 2026</h1>
+                <h1>PLAYER STATUS</h1>
                 <div class="user-info">
-                    <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-top: 15px;">
                         <div id="user-avatar" onclick="abrirConfigPerfil()"></div>
                         <div>
-                            <span id="user-email-display" style="font-weight: 600; display: block;"></span>
-                            <button onclick="logout()" class="btn-logout">Sair</button>
+                            <span id="user-email-display" style="font-family: 'Orbitron'; color: var(--sl-blue);"></span>
+                            <br>
+                            <button onclick="logout()" class="btn-logout">ABANDON QUEST</button>
                         </div>
                     </div>
-
-                    <div id="edit-profile" style="display:none; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); margin-top: 15px; border: 1px solid #eee; position: absolute; z-index: 100;">
-                        <label style="font-size: 12px; font-weight: bold; color: #64748b;">URL DA FOTO:</label><br>
-                        <input type="text" id="new-photo-url" placeholder="http://..." style="padding: 8px; margin: 8px 0; width: 220px; border: 1px solid #ddd; border-radius: 6px;"><br>
-                        <button onclick="salvarFoto()" style="background: var(--accent); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; width: 100%;">Atualizar Foto</button>
+                    <div id="edit-profile" style="display:none; padding: 15px; margin-top: 10px; position: absolute; z-index: 100;">
+                        <input type="text" id="new-photo-url" placeholder="IMAGE URL" style="background: #111; color: white; border: 1px solid var(--sl-blue); padding: 5px;">
+                        <button onclick="salvarFoto()" style="background: var(--sl-blue); padding: 5px; margin-top: 5px; cursor: pointer;">UPDATE IMAGE</button>
                     </div>
                 </div>
 
-                <div class="input-group" style="margin-top: 20px;">
-                    <input type="text" id="habitInput" placeholder="Nova tarefa...">
-                    <button onclick="adicionarHabito()">+</button>
+                <div class="input-group" style="margin-top: 30px;">
+                    <input type="text" id="habitInput" placeholder="REGISTER DAILY QUEST...">
+                    <button onclick="adicionarHabito()" style="width: 50px;">+</button>
                 </div>
             </div>
             
@@ -213,16 +181,16 @@
                 <div class="chart-container">
                     <canvas id="progressChart"></canvas>
                     <div id="percentage-label">0%</div>
+                    <p style="text-align: center; font-size: 0.7rem; margin-top: 5px; color: var(--sl-blue);">QUEST COMPLETION</p>
                 </div>
             </div>
         </header>
 
         <div class="table-wrapper">
+            <h3 style="font-family: 'Orbitron'; color: var(--sl-blue); margin-bottom: 20px;">[ DAILY QUEST LOG ]</h3>
             <table>
                 <thead>
-                    <tr id="header-row">
-                        <th class="sticky-col">Tarefa</th>
-                    </tr>
+                    <tr id="header-row"><th class="sticky-col">QUEST NAME</th></tr>
                 </thead>
                 <tbody id="habit-grid"></tbody>
             </table>
