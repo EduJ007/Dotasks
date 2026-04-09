@@ -49,10 +49,21 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* --- Alerta Estilo Sistema --- */
+        #custom-alert {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 10000; display: none; background: var(--sl-black);
+            border: 2px solid var(--sl-blue); min-width: 300px;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+            clip-path: polygon(5% 0, 100% 0, 100% 80%, 95% 100%, 0 100%, 0 20%);
+        }
+        .alert-header { background: var(--sl-blue); color: black; padding: 4px; font-family: 'Orbitron'; font-size: 0.7rem; text-align: center; font-weight: bold; }
+        .alert-content { padding: 15px; text-align: center; font-weight: bold; font-family: 'Rajdhani'; font-size: 1.1rem; }
+
         /* --- Auth Overlay & Card --- */
         #auth-container {
             position: fixed; inset: 0;
-            background: rgba(2, 6, 23, 0.9);
+            background: rgba(2, 6, 23, 0.95);
             backdrop-filter: blur(10px);
             display: flex; align-items: center; justify-content: center;
             z-index: 8000;
@@ -75,31 +86,22 @@
         .input-field input {
             width: 100%; background: rgba(10, 25, 47, 0.8); border: 1px solid var(--sl-border);
             border-bottom: 2px solid var(--sl-blue); padding: 12px; color: white;
-            font-family: 'Rajdhani'; font-size: 1rem; outline: none; box-sizing: border-box;
+            font-family: 'Rajdhani'; font-size: 1.1rem; outline: none; box-sizing: border-box;
         }
 
         .btn-auth {
             width: 100%; background: var(--sl-blue); color: black; border: none;
             padding: 12px; font-family: 'Orbitron'; font-weight: bold; cursor: pointer;
-            transition: 0.3s; margin-top: 10px;
+            transition: 0.3s; margin-top: 10px; clip-path: polygon(0 0, 95% 0, 100% 25%, 100% 100%, 5% 100%, 0 75%);
         }
         .btn-auth:hover { background: white; box-shadow: 0 0 15px white; }
         
         .btn-google {
             width: 100%; background: transparent; color: white; border: 1px solid white;
             padding: 10px; margin-top: 15px; font-family: 'Orbitron'; font-size: 0.8rem;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s;
         }
-
-        /* --- Alerta --- */
-        #custom-alert {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 10000; display: none; background: var(--sl-black);
-            border: 2px solid var(--sl-blue); min-width: 280px;
-            clip-path: polygon(5% 0, 100% 0, 100% 80%, 95% 100%, 0 100%, 0 20%);
-        }
-        .alert-header { background: var(--sl-blue); color: black; padding: 4px; font-family: 'Orbitron'; font-size: 0.7rem; text-align: center; }
-        .alert-content { padding: 15px; text-align: center; font-weight: bold; }
+        .btn-google:hover { background: rgba(255,255,255,0.1); }
 
         /* --- Dashboard UI --- */
         .main-container { max-width: 1600px; margin: 40px auto; padding: 0 20px; }
@@ -109,7 +111,6 @@
             border: 2px solid var(--sl-blue); backdrop-filter: blur(10px);
             clip-path: polygon(0 0, 100% 0, 100% 90%, 98% 100%, 0 100%);
         }
-        h1 { font-family: 'Orbitron'; color: var(--sl-blue); letter-spacing: 3px; margin: 0; font-size: 1.5rem; }
 
         #user-avatar {
             width: 50px; height: 50px; border: 2px solid var(--sl-blue);
@@ -137,7 +138,6 @@
             position: sticky; left: 0; z-index: 10;
         }
 
-        /* --- Checkbox SL --- */
         input[type="checkbox"] {
             appearance: none; width: 18px; height: 18px; border: 1px solid var(--sl-blue);
             cursor: pointer; position: relative;
@@ -153,32 +153,37 @@
     </style>
 </head>
 <body>
+
     <div id="loading-screen">
         <div class="spinner"></div>
         <p style="font-family: 'Orbitron'; letter-spacing: 2px; color: var(--sl-blue); margin-top: 15px;">INITIALIZING SYSTEM...</p>
     </div>
 
     <div id="custom-alert">
-        <div class="alert-header">SYSTEM MESSAGE</div>
+        <div class="alert-header">SYSTEM NOTIFICATION</div>
         <div class="alert-content" id="alert-message"></div>
     </div>
 
     <div id="auth-container" style="display: none;">
         <div class="auth-card">
-            <h2>PLAYER LOGIN</h2>
+            <h2 id="auth-title">PLAYER LOGIN</h2>
             <div class="input-field">
                 <label>E-MAIL ADDRESS</label>
                 <input type="email" id="email" placeholder="hunter@association.com">
             </div>
             <div class="input-field">
-                <label>PASSWORD</label>
+                <label>ACCESS KEY (PASSWORD)</label>
                 <input type="password" id="password" placeholder="••••••••">
             </div>
-            <button class="btn-auth" onclick="login()">ENTER GATE</button>
+            <button class="btn-auth" id="main-auth-btn" onclick="executarAuth()">ENTER GATE</button>
             <button class="btn-google" onclick="loginGoogle()">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="16">
+                <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.8 2.7l2.91 2.26c1.7-1.57 2.69-3.89 2.69-6.59z" fill="#4285F4"/><path d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.8.54-1.83.85-3.05.85-2.34 0-4.32-1.58-5.03-3.71L1.03 13.4C2.51 16.34 5.51 18 9 18z" fill="#34A853"/><path d="M3.97 10.7c-.18-.54-.28-1.12-.28-1.7s.1-1.16.28-1.7l-2.97-2.3C.36 6.17 0 7.55 0 9s.36 2.83 1.01 4.1l2.96-2.4z" fill="#FBBC05"/><path d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.42C13.47.99 11.43 0 9 0 5.51 0 2.51 1.66 1.03 4.6l2.97 2.3c.7-2.13 2.69-3.72 5.03-3.72z" fill="#EA4335"/></svg>
                 GOOGLE SYNC
             </button>
+            <p style="margin-top: 20px; font-size: 0.8rem; color: #94a3b8;">
+                <span id="auth-switch-text">NEW PLAYER?</span> 
+                <a href="javascript:void(0)" id="auth-toggle-link" onclick="toggleAuthMode()" style="color: var(--sl-blue); text-decoration: none; font-weight: bold;">CREATE ACCOUNT</a>
+            </p>
         </div>
     </div>
 
@@ -187,7 +192,7 @@
             <div>
                 <h1>PLAYER STATUS</h1>
                 <div style="display: flex; align-items: center; gap: 15px; margin-top: 15px;">
-                    <div id="user-avatar" onclick="abrirConfigPerfil()"></div>
+                    <div id="user-avatar"></div>
                     <div>
                         <span id="user-email-display" style="font-family: 'Orbitron'; color: var(--sl-blue); font-size: 0.9rem;"></span>
                         <br>
@@ -199,8 +204,9 @@
             <div id="quest-creation-zone">
                 <button id="btn-show-input" onclick="toggleInput(true)" style="background: var(--sl-blue); border: none; padding: 10px 20px; font-family: 'Orbitron'; cursor: pointer; font-weight: bold;">+ NEW QUEST</button>
                 <div id="input-container" style="display: none; gap: 10px;">
-                    <input type="text" id="habitInput" placeholder="NEW QUEST NAME..." style="background: #020617; border: 1px solid var(--sl-blue); color: white; padding: 8px; font-family: 'Rajdhani';">
+                    <input type="text" id="habitInput" placeholder="QUEST NAME..." style="background: #020617; border: 1px solid var(--sl-blue); color: white; padding: 8px; font-family: 'Rajdhani';">
                     <button onclick="adicionarHabito()" style="background: var(--sl-blue); border: none; padding: 8px 15px; cursor: pointer; font-weight: bold;">ACCEPT</button>
+                    <button onclick="toggleInput(false)" style="background: #ff4d4d; border: none; padding: 8px 10px; cursor: pointer; color: white;">X</button>
                 </div>
             </div>
 
@@ -215,11 +221,7 @@
 
         <div class="table-wrapper">
             <table>
-                <thead>
-                    <tr id="header-row">
-                        <th class="sticky-col">DAILY QUESTS</th>
-                    </tr>
-                </thead>
+                <thead><tr id="header-row"><th class="sticky-col">QUEST LOG</th></tr></thead>
                 <tbody id="habit-grid"></tbody>
             </table>
         </div>

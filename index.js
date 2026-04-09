@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { 
-    getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, 
-    GoogleAuthProvider, signInWithPopup 
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
     getFirestore, doc, setDoc, collection, onSnapshot, updateDoc, deleteDoc 
@@ -21,32 +21,66 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
-// --- UI HELPERS ---
+// --- SISTEMA DE ALERTAS ---
 window.showAlert = (msg) => {
     const alertBox = document.getElementById('custom-alert');
     document.getElementById('alert-message').innerText = msg;
     alertBox.style.display = 'block';
-    setTimeout(() => alertBox.style.display = 'none', 3500);
+    setTimeout(() => alertBox.style.display = 'none', 4000);
 };
 
-window.toggleInput = (show) => {
-    document.getElementById('btn-show-input').style.display = show ? 'none' : 'block';
-    document.getElementById('input-container').style.display = show ? 'flex' : 'none';
-    if(show) document.getElementById('habitInput').focus();
+// --- AUTH LOGIC (LOGIN / REGISTER) ---
+let isSignUpMode = false;
+
+window.toggleAuthMode = () => {
+    isSignUpMode = !isSignUpMode;
+    const title = document.getElementById('auth-title');
+    const btn = document.getElementById('main-auth-btn');
+    const switchText = document.getElementById('auth-switch-text');
+    const link = document.getElementById('auth-toggle-link');
+
+    if (isSignUpMode) {
+        title.innerText = "NEW REGISTRATION";
+        btn.innerText = "CREATE PLAYER";
+        switchText.innerText = "ALREADY A HUNTER?";
+        link.innerText = "LOG IN";
+    } else {
+        title.innerText = "PLAYER LOGIN";
+        btn.innerText = "ENTER GATE";
+        switchText.innerText = "NEW PLAYER?";
+        link.innerText = "CREATE ACCOUNT";
+    }
 };
 
-// --- AUTH ---
-window.login = () => {
-    const e = document.getElementById('email').value;
-    const p = document.getElementById('password').value;
-    if(!e || !p) return showAlert("FILL ALL FIELDS");
-    signInWithEmailAndPassword(auth, e, p).catch(() => showAlert("ACCESS DENIED"));
+window.executarAuth = async () => {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    if (!email || !password) return showAlert("MISSING CREDENTIALS!");
+
+    try {
+        if (isSignUpMode) {
+            await createUserWithEmailAndPassword(auth, email, password);
+            showAlert("WELCOME, HUNTER!");
+        } else {
+            await signInWithEmailAndPassword(auth, email, password);
+        }
+    } catch (error) {
+        switch (error.code) {
+            case 'auth/invalid-credential': showAlert("ERROR: INVALID ACCESS KEY"); break;
+            case 'auth/email-already-in-use': showAlert("ERROR: PLAYER ALREADY EXISTS"); break;
+            case 'auth/weak-password': showAlert("ERROR: PASSWORD TOO WEAK"); break;
+            case 'auth/invalid-email': showAlert("ERROR: MALFORMED E-MAIL"); break;
+            case 'auth/user-not-found': showAlert("ERROR: PLAYER NOT FOUND"); break;
+            default: showAlert("SYSTEM ERROR: " + error.code);
+        }
+    }
 };
 
 window.loginGoogle = () => signInWithPopup(auth, googleProvider).catch(() => showAlert("SYNC ERROR"));
 window.logout = () => signOut(auth);
 
-// --- CORE SYSTEM ---
+// --- DASHBOARD LOGIC ---
 const diasNoMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
 let progressChart;
 
@@ -60,15 +94,19 @@ function initChart() {
     });
 }
 
+window.toggleInput = (show) => {
+    document.getElementById('btn-show-input').style.display = show ? 'none' : 'block';
+    document.getElementById('input-container').style.display = show ? 'flex' : 'none';
+};
+
 window.adicionarHabito = async () => {
     const nome = document.getElementById('habitInput').value;
     if (!nome) return;
     try {
         await setDoc(doc(db, "users", auth.currentUser.uid, "habits", nome), { nome, checks: {} });
-        window.toggleInput(false);
         document.getElementById('habitInput').value = '';
-        showAlert("QUEST ACCEPTED");
-    } catch (e) { showAlert("SYSTEM ERROR"); }
+        toggleInput(false);
+    } catch (e) { showAlert("QUEST FAILED TO REGISTER"); }
 };
 
 window.deletarHabito = async (nome) => {
@@ -88,14 +126,14 @@ function renderizarTabela(habitos) {
     for (let i = 1; i <= diasNoMes; i++) {
         const th = document.createElement('th');
         th.innerText = i;
-        if(i === diaHoje) th.style.boxShadow = "inset 0 -2px 0 var(--sl-blue)";
+        if(i === diaHoje) th.style.color = "var(--sl-blue)";
         head.appendChild(th);
     }
 
     habitos.forEach(h => {
         const tr = document.createElement('tr');
         let html = `<td class="sticky-col">
-            <span onclick="deletarHabito('${h.nome}')" style="color:#ff4d4d; cursor:pointer; margin-right:8px;">[X]</span> ${h.nome}
+            <span onclick="deletarHabito('${h.nome}')" style="color:#ff4d4d; cursor:pointer; margin-right:8px; font-weight:bold;">[X]</span> ${h.nome}
         </td>`;
         for (let i = 1; i <= diasNoMes; i++) {
             const checked = h.checks && h.checks[i] ? "checked" : "";
@@ -118,7 +156,6 @@ function atualizarProgresso() {
     document.getElementById('percentage-label').innerText = porcento + "%";
 }
 
-// Checkbox Listener
 document.addEventListener('change', async (e) => {
     if (e.target.classList.contains('habit-check')) {
         const { habit, day } = e.target.dataset;
@@ -135,12 +172,18 @@ onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById('auth-container').style.display = 'none';
         document.getElementById('app-content').style.display = 'block';
-        document.getElementById('user-email-display').innerText = user.email.split('@')[0];
+        document.getElementById('user-email-display').innerText = user.email;
         
-        // Avatar
         const avatar = document.getElementById('user-avatar');
-        avatar.innerText = user.photoURL ? "" : user.email[0].toUpperCase();
-        if(user.photoURL) avatar.style.backgroundImage = `url(${user.photoURL})`;
+        if(user.photoURL) {
+            avatar.style.backgroundImage = `url(${user.photoURL})`;
+            avatar.innerText = "";
+        } else {
+            avatar.innerText = user.email[0].toUpperCase();
+            avatar.style.backgroundImage = "none";
+            avatar.style.backgroundColor = "#00d4ff";
+            avatar.style.color = "black";
+        }
         
         initChart();
         onSnapshot(collection(db, "users", user.uid, "habits"), (snap) => {
