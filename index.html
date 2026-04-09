@@ -3,227 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solo Leveling | Quest Log</title>
+    <title>Gerenciador de Hábitos</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --sl-blue: #00d4ff;
-            --sl-dark-blue: #0a192f;
-            --sl-purple: #7000ff;
-            --sl-black: #020617;
-            --sl-border: rgba(0, 212, 255, 0.3);
-            --bg-gradient: linear-gradient(180deg, #020617 0%, #0a192f 100%);
+            --primary-blue: #3b82f6;
+            --bg-body: #f3f4f6; /* bg-gray-100 */
+            --bg-card: #ffffff;
         }
 
         body {
-            background: var(--bg-gradient);
-            background-attachment: fixed;
-            color: #e2e8f0;
+            background-color: var(--bg-body);
+            color: #1f2937;
+            font-family: 'Inter', sans-serif;
             margin: 0;
-            font-family: 'Rajdhani', sans-serif;
-            text-transform: uppercase;
-            overflow-x: hidden;
+            padding: 0;
         }
 
-        /* --- Scrollbar --- */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--sl-black); }
-        ::-webkit-scrollbar-thumb { background: var(--sl-blue); border-radius: 4px; }
-
-        /* --- Loading Screen --- */
-        #loading-screen {
-            position: fixed; inset: 0;
-            background: var(--sl-black);
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            z-index: 9999;
-        }
-        .spinner {
-            width: 60px; height: 60px;
-            border: 3px solid transparent;
-            border-top-color: var(--sl-blue);
-            border-bottom-color: var(--sl-purple);
-            border-radius: 50%;
-            animation: spin 1s infinite linear;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* --- Alerta Estilo Sistema --- */
+        /* --- Alertas de Sistema --- */
         #custom-alert {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            z-index: 10000; display: none; background: var(--sl-black);
-            border: 2px solid var(--sl-blue); min-width: 300px;
-            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
-            clip-path: polygon(5% 0, 100% 0, 100% 80%, 95% 100%, 0 100%, 0 20%);
+            z-index: 10000; display: none; padding: 15px 25px;
+            background: #ef4444; color: white; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-weight: 600;
         }
-        .alert-header { background: var(--sl-blue); color: black; padding: 4px; font-family: 'Orbitron'; font-size: 0.7rem; text-align: center; font-weight: bold; }
-        .alert-content { padding: 15px; text-align: center; font-weight: bold; font-family: 'Rajdhani'; font-size: 1.1rem; }
 
-        /* --- Auth Overlay & Card --- */
+        /* --- Telas --- */
         #auth-container {
-            position: fixed; inset: 0;
-            background: rgba(2, 6, 23, 0.95);
-            backdrop-filter: blur(10px);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 8000;
+            display: flex; height: 100vh; align-items: center; justify-content: center;
         }
 
-        .auth-card {
-            background: var(--sl-black);
-            border: 2px solid var(--sl-blue);
-            padding: 40px;
-            width: 100%; max-width: 380px;
-            box-shadow: 0 0 40px rgba(0, 212, 255, 0.2);
-            clip-path: polygon(10% 0, 100% 0, 100% 90%, 90% 100%, 0 100%, 0 10%);
-            text-align: center;
+        .card {
+            background: var(--bg-card); padding: 30px; border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 400px;
         }
 
-        .auth-card h2 { font-family: 'Orbitron'; color: var(--sl-blue); margin-bottom: 30px; letter-spacing: 2px; }
+        h2 { margin-top: 0; color: #111827; }
 
-        .input-field { margin-bottom: 20px; text-align: left; }
-        .input-field label { color: var(--sl-blue); font-size: 0.7rem; font-family: 'Orbitron'; margin-left: 5px; }
-        .input-field input {
-            width: 100%; background: rgba(10, 25, 47, 0.8); border: 1px solid var(--sl-border);
-            border-bottom: 2px solid var(--sl-blue); padding: 12px; color: white;
-            font-family: 'Rajdhani'; font-size: 1.1rem; outline: none; box-sizing: border-box;
-        }
-
-        .btn-auth {
-            width: 100%; background: var(--sl-blue); color: black; border: none;
-            padding: 12px; font-family: 'Orbitron'; font-weight: bold; cursor: pointer;
-            transition: 0.3s; margin-top: 10px; clip-path: polygon(0 0, 95% 0, 100% 25%, 100% 100%, 5% 100%, 0 75%);
-        }
-        .btn-auth:hover { background: white; box-shadow: 0 0 15px white; }
-        
-        .btn-google {
-            width: 100%; background: transparent; color: white; border: 1px solid white;
-            padding: 10px; margin-top: 15px; font-family: 'Orbitron'; font-size: 0.8rem;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s;
-        }
-        .btn-google:hover { background: rgba(255,255,255,0.1); }
-
-        /* --- Dashboard UI --- */
-        .main-container { max-width: 1600px; margin: 40px auto; padding: 0 20px; }
-        .dashboard-header {
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(10, 25, 47, 0.8); padding: 25px;
-            border: 2px solid var(--sl-blue); backdrop-filter: blur(10px);
-            clip-path: polygon(0 0, 100% 0, 100% 90%, 98% 100%, 0 100%);
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; font-size: 0.9rem; font-weight: 600; }
+        .input-group input {
+            width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;
+            box-sizing: border-box; font-size: 1rem;
         }
 
-        #user-avatar {
-            width: 50px; height: 50px; border: 2px solid var(--sl-blue);
-            box-shadow: 0 0 10px var(--sl-blue); font-family: 'Orbitron';
-            background-size: cover; background-position: center;
-            display: flex; align-items: center; justify-content: center; cursor: pointer;
+        .btn {
+            width: 100%; padding: 12px; border: none; border-radius: 6px;
+            font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 1rem;
+        }
+        .btn-primary { background: var(--primary-blue); color: white; margin-bottom: 10px; }
+        .btn-primary:hover { background: #2563eb; }
+
+        /* --- Estilo do Checkbox que você gostou --- */
+        .check-container {
+            display: inline-block; width: 24px; height: 24px;
+            background-color: #e5e7eb; border-radius: 6px; cursor: pointer;
+            position: relative; transition: 0.2s;
+        }
+        .check-container.checked {
+            background-color: var(--primary-blue);
+        }
+        .check-container.checked::after {
+            content: '✓'; color: white; position: absolute;
+            left: 5px; top: 1px; font-weight: bold; font-size: 16px;
         }
 
-        .btn-logout { 
-            background: transparent; color: #ff4d4d; border: 1px solid #ff4d4d; 
-            padding: 4px 10px; cursor: pointer; font-family: 'Orbitron'; font-size: 0.7rem; margin-top: 5px;
-        }
+        /* --- Dashboard --- */
+        .header { background: white; padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .main-content { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .table-container { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f9fafb; padding: 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        td { padding: 15px; border-bottom: 1px solid #f3f4f6; }
 
-        /* --- Tabela --- */
-        .table-wrapper {
-            background: rgba(2, 6, 23, 0.6); margin-top: 20px; padding: 20px; 
-            border: 1px solid var(--sl-border); overflow-x: auto;
-        }
-        table { width: 100%; border-collapse: separate; border-spacing: 0 5px; }
-        th { color: var(--sl-blue); font-family: 'Orbitron'; font-size: 0.7rem; padding: 10px; }
-        td { background: rgba(10, 25, 47, 0.5); padding: 10px; text-align: center; border-top: 1px solid var(--sl-border); }
-        .sticky-col { 
-            background: var(--sl-dark-blue) !important; color: white; 
-            border-left: 3px solid var(--sl-blue); min-width: 180px; text-align: left;
-            position: sticky; left: 0; z-index: 10;
-        }
-
-        input[type="checkbox"] {
-            appearance: none; width: 18px; height: 18px; border: 1px solid var(--sl-blue);
-            cursor: pointer; position: relative;
-        }
-        input[type="checkbox"]:checked { background: var(--sl-blue); box-shadow: 0 0 8px var(--sl-blue); }
-        input[type="checkbox"]:checked::after { content: '✔'; position: absolute; color: black; font-size: 12px; left: 3px; top: -1px; }
-
-        .chart-container { position: relative; width: 80px; height: 80px; }
-        #percentage-label { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-family: 'Orbitron'; color: var(--sl-blue); font-size: 0.9rem;
-        }
+        .delete-btn { color: #ef4444; cursor: pointer; font-weight: bold; margin-right: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="loading-screen">
-        <div class="spinner"></div>
-        <p style="font-family: 'Orbitron'; letter-spacing: 2px; color: var(--sl-blue); margin-top: 15px;">INITIALIZING SYSTEM...</p>
-    </div>
+    <div id="custom-alert"></div>
 
-    <div id="custom-alert">
-        <div class="alert-header">SYSTEM NOTIFICATION</div>
-        <div class="alert-content" id="alert-message"></div>
-    </div>
-
-    <div id="auth-container" style="display: none;">
-        <div class="auth-card">
-            <h2 id="auth-title">PLAYER LOGIN</h2>
-            <div class="input-field">
-                <label>E-MAIL ADDRESS</label>
-                <input type="email" id="email" placeholder="hunter@association.com">
+    <div id="auth-container">
+        <div class="card">
+            <h2 id="auth-title">Entrar no Sistema</h2>
+            <div class="input-group">
+                <label>E-mail</label>
+                <input type="email" id="email" placeholder="seu@email.com">
             </div>
-            <div class="input-field">
-                <label>ACCESS KEY (PASSWORD)</label>
+            <div class="input-group">
+                <label>Senha</label>
                 <input type="password" id="password" placeholder="••••••••">
             </div>
-            <button class="btn-auth" id="main-auth-btn" onclick="executarAuth()">ENTER GATE</button>
-            <button class="btn-google" onclick="loginGoogle()">
-                <svg width="18" height="18" viewBox="0 0 18 18"><path d="M17.64 9.2c0-.63-.06-1.25-.16-1.84H9v3.47h4.84c-.21 1.12-.84 2.07-1.8 2.7l2.91 2.26c1.7-1.57 2.69-3.89 2.69-6.59z" fill="#4285F4"/><path d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.8.54-1.83.85-3.05.85-2.34 0-4.32-1.58-5.03-3.71L1.03 13.4C2.51 16.34 5.51 18 9 18z" fill="#34A853"/><path d="M3.97 10.7c-.18-.54-.28-1.12-.28-1.7s.1-1.16.28-1.7l-2.97-2.3C.36 6.17 0 7.55 0 9s.36 2.83 1.01 4.1l2.96-2.4z" fill="#FBBC05"/><path d="M9 3.58c1.32 0 2.5.45 3.44 1.35L15 2.42C13.47.99 11.43 0 9 0 5.51 0 2.51 1.66 1.03 4.6l2.97 2.3c.7-2.13 2.69-3.72 5.03-3.72z" fill="#EA4335"/></svg>
-                GOOGLE SYNC
-            </button>
-            <p style="margin-top: 20px; font-size: 0.8rem; color: #94a3b8;">
-                <span id="auth-switch-text">NEW PLAYER?</span> 
-                <a href="javascript:void(0)" id="auth-toggle-link" onclick="toggleAuthMode()" style="color: var(--sl-blue); text-decoration: none; font-weight: bold;">CREATE ACCOUNT</a>
+            <button class="btn btn-primary" onclick="executarAuth()">Entrar</button>
+            
+            <p style="text-align: center; font-size: 0.9rem;">
+                <span id="auth-switch-text">Não tem conta?</span> 
+                <a href="javascript:void(0)" id="auth-toggle-link" onclick="toggleAuthMode()" style="color: var(--primary-blue); font-weight: bold;">Criar conta</a>
             </p>
         </div>
     </div>
 
-    <div class="main-container" id="app-content" style="display: none;">
-        <header class="dashboard-header">
-            <div>
-                <h1>PLAYER STATUS</h1>
-                <div style="display: flex; align-items: center; gap: 15px; margin-top: 15px;">
-                    <div id="user-avatar"></div>
-                    <div>
-                        <span id="user-email-display" style="font-family: 'Orbitron'; color: var(--sl-blue); font-size: 0.9rem;"></span>
-                        <br>
-                        <button onclick="logout()" class="btn-logout">ABANDON QUEST</button>
-                    </div>
-                </div>
+    <div id="app-content" style="display: none;">
+        <div class="header">
+            <h3 id="user-display">Usuário</h3>
+            <button onclick="logout()" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold;">Sair</button>
+        </div>
+
+        <div class="main-content">
+            <div class="input-group" style="display:flex; gap:10px;">
+                <input type="text" id="habitInput" placeholder="Novo hábito..." style="flex:1;">
+                <button class="btn btn-primary" onclick="adicionarHabito()" style="width:auto;">Adicionar</button>
             </div>
 
-            <div id="quest-creation-zone">
-                <button id="btn-show-input" onclick="toggleInput(true)" style="background: var(--sl-blue); border: none; padding: 10px 20px; font-family: 'Orbitron'; cursor: pointer; font-weight: bold;">+ NEW QUEST</button>
-                <div id="input-container" style="display: none; gap: 10px;">
-                    <input type="text" id="habitInput" placeholder="QUEST NAME..." style="background: #020617; border: 1px solid var(--sl-blue); color: white; padding: 8px; font-family: 'Rajdhani';">
-                    <button onclick="adicionarHabito()" style="background: var(--sl-blue); border: none; padding: 8px 15px; cursor: pointer; font-weight: bold;">ACCEPT</button>
-                    <button onclick="toggleInput(false)" style="background: #ff4d4d; border: none; padding: 8px 10px; cursor: pointer; color: white;">X</button>
-                </div>
+            <div class="table-container">
+                <table id="habitTable">
+                    <thead>
+                        <tr id="header-row">
+                            <th>Hábito</th>
+                            </tr>
+                    </thead>
+                    <tbody id="habit-grid"></tbody>
+                </table>
             </div>
-
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <div class="chart-container">
-                    <canvas id="progressChart"></canvas>
-                    <div id="percentage-label">0%</div>
-                </div>
-                <span style="font-size: 0.6rem; color: var(--sl-blue); font-family: 'Orbitron'; margin-top: 5px;">COMPLETION</span>
-            </div>
-        </header>
-
-        <div class="table-wrapper">
-            <table>
-                <thead><tr id="header-row"><th class="sticky-col">QUEST LOG</th></tr></thead>
-                <tbody id="habit-grid"></tbody>
-            </table>
         </div>
     </div>
 
