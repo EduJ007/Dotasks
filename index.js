@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { 
     getAuth, onAuthStateChanged, signInWithEmailAndPassword, 
-    createUserWithEmailAndPassword, signOut 
+    createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
     getFirestore, doc, setDoc, collection, onSnapshot, updateDoc, deleteDoc 
@@ -19,8 +19,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
 
-// --- FUNÇÃO DE ALERTA REAL ---
+// --- ALERTAS ---
 window.showAlert = (msg) => {
     const alertBox = document.getElementById('custom-alert');
     alertBox.innerText = msg;
@@ -28,54 +29,49 @@ window.showAlert = (msg) => {
     setTimeout(() => alertBox.style.display = 'none', 4000);
 };
 
-// --- ALTERNAR LOGIN / CRIAÇÃO ---
+// --- AUTH LOGIC ---
 let isSignUpMode = false;
 window.toggleAuthMode = () => {
     isSignUpMode = !isSignUpMode;
-    document.getElementById('auth-title').innerText = isSignUpMode ? "Criar Nova Conta" : "Entrar no Sistema";
+    document.getElementById('auth-title').innerText = isSignUpMode ? "Criar Conta" : "Entrar";
+    document.getElementById('main-auth-btn').innerText = isSignUpMode ? "Cadastrar" : "Entrar";
     document.getElementById('auth-switch-text').innerText = isSignUpMode ? "Já tem conta?" : "Não tem conta?";
     document.getElementById('auth-toggle-link').innerText = isSignUpMode ? "Entrar" : "Criar conta";
-    document.getElementById('main-auth-btn').innerText = isSignUpMode ? "Cadastrar" : "Entrar";
 };
 
-// --- LOGIN E CADASTRO ---
 window.executarAuth = async () => {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-
-    if (!email || !password) {
-        return showAlert("Preencha todos os campos!");
-    }
+    if (!email || !password) return showAlert("Preencha todos os campos!");
 
     try {
         if (isSignUpMode) {
             await createUserWithEmailAndPassword(auth, email, password);
-            showAlert("Conta criada com sucesso!");
         } else {
             await signInWithEmailAndPassword(auth, email, password);
         }
     } catch (error) {
         console.error(error.code);
         if (error.code === 'auth/invalid-credential') showAlert("E-mail ou senha incorretos.");
-        else if (error.code === 'auth/weak-password') showAlert("A senha deve ter pelo menos 6 caracteres.");
-        else if (error.code === 'auth/email-already-in-use') showAlert("Este e-mail já está em uso.");
-        else showAlert("Erro: " + error.code);
+        else if (error.code === 'auth/weak-password') showAlert("Senha muito curta (mín. 6 caracteres).");
+        else if (error.code === 'auth/email-already-in-use') showAlert("E-mail já cadastrado.");
+        else showAlert("Erro ao acessar: " + error.code);
     }
 };
 
+window.loginGoogle = () => signInWithPopup(auth, googleProvider).catch(e => showAlert("Erro no login Google"));
 window.logout = () => signOut(auth);
 
-// --- LÓGICA DO DASHBOARD ---
+// --- DB LOGIC ---
 const diasNoMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
 
 window.adicionarHabito = async () => {
     const nome = document.getElementById('habitInput').value;
-    if (!nome) return showAlert("Digite o nome do hábito!");
-    
+    if (!nome) return;
     try {
         await setDoc(doc(db, "users", auth.currentUser.uid, "habits", nome), { nome, checks: {} });
         document.getElementById('habitInput').value = '';
-    } catch (e) { showAlert("Erro ao salvar no banco de dados."); }
+    } catch (e) { showAlert("Erro ao salvar dado."); }
 };
 
 window.toggleCheck = async (habitNome, dia, statusAtual) => {
@@ -86,42 +82,32 @@ window.toggleCheck = async (habitNome, dia, statusAtual) => {
 };
 
 window.deletarHabito = async (nome) => {
-    if(confirm("Deseja excluir este hábito?")) {
-        await deleteDoc(doc(db, "users", auth.currentUser.uid, "habits", nome));
-    }
+    if(confirm(`Excluir "${nome}"?`)) await deleteDoc(doc(db, "users", auth.currentUser.uid, "habits", nome));
 };
 
 function renderizarTabela(habitos) {
     const grid = document.getElementById('habit-grid');
     const headerRow = document.getElementById('header-row');
     
-    // Gerar Cabeçalho (Dias)
-    headerRow.innerHTML = '<th>Hábito</th>';
-    for (let i = 1; i <= diasNoMes; i++) {
-        headerRow.innerHTML += `<th>${i}</th>`;
-    }
+    headerRow.innerHTML = '<th style="text-align:left;">Hábito</th>';
+    for (let i = 1; i <= diasNoMes; i++) headerRow.innerHTML += `<th>${i}</th>`;
 
     grid.innerHTML = "";
     habitos.forEach(h => {
-        let html = `<tr><td><span class="delete-btn" onclick="deletarHabito('${h.nome}')">✕</span>${h.nome}</td>`;
+        let html = `<tr><td class="habit-name-td"><span class="delete-btn" onclick="deletarHabito('${h.nome}')">✕</span>${h.nome}</td>`;
         for (let i = 1; i <= diasNoMes; i++) {
             const isChecked = h.checks && h.checks[i] ? 'checked' : '';
-            html += `<td>
-                <div class="check-container ${isChecked}" onclick="toggleCheck('${h.nome}', ${i}, ${!!isChecked})"></div>
-            </td>`;
+            html += `<td><div class="check-container ${isChecked}" onclick="toggleCheck('${h.nome}', ${i}, ${!!isChecked})"></div></td>`;
         }
-        html += `</tr>`;
-        grid.innerHTML += html;
+        grid.innerHTML += html + '</tr>';
     });
 }
 
-// --- MONITOR DE AUTENTICAÇÃO ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
         document.getElementById('auth-container').style.display = 'none';
         document.getElementById('app-content').style.display = 'block';
-        document.getElementById('user-display').innerText = `Olá, ${user.email}`;
-        
+        document.getElementById('user-display').innerText = user.email;
         onSnapshot(collection(db, "users", user.uid, "habits"), (snap) => {
             renderizarTabela(snap.docs.map(d => d.data()));
         });
