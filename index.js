@@ -16,6 +16,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let pizzaChart;
+let dailyChart;
 let modoExclusao = false;
 let habitoParaExcluir = null;
 const diasNoMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
@@ -31,7 +32,7 @@ window.openDeleteModal = (nome) => {
 };
 window.closeDeleteModal = () => {
     document.getElementById('delete-modal').style.display = 'none';
-    ativarModoExclusao(); // Desliga o modo após fechar
+    ativarModoExclusao(); 
 };
 
 window.confirmarNovoHabito = async () => {
@@ -56,15 +57,11 @@ window.ativarModoExclusao = () => {
     btn.style.background = modoExclusao ? "#ef4444" : "white";
     btn.style.color = modoExclusao ? "white" : "#ef4444";
     showAlert(modoExclusao ? "Clique no nome do hábito para apagar" : "Modo edição desativado");
-    // Recarrega a UI para aplicar classes de clique
-    onSnapshot(collection(db, "users", auth.currentUser.uid, "habits"), (snap) => {
-        renderizarTabela(snap.docs.map(d => d.data()));
-    });
 };
 
 // --- CORE ---
 window.toggleCheck = async (n, d, s) => {
-    if(modoExclusao) return; // Impede marcar check no modo exclusão
+    if(modoExclusao) return;
     const ref = doc(db, "users", auth.currentUser.uid, "habits", n);
     const obj = {}; obj[`checks.${d}`] = !s;
     await updateDoc(ref, obj);
@@ -78,9 +75,25 @@ function renderizarTabela(habitos) {
     for (let i = 1; i <= diasNoMes; i++) head.innerHTML += `<th>${i}</th>`;
 
     grid.innerHTML = "";
-    let totalChecks = 0;
-    let totalPossivel = habitos.length * diasNoMes;
+    let totalChecksMensal = 0;
+    let totalPossivelMensal = habitos.length * diasNoMes;
 
+    // Para o gráfico diário
+    const porcentagensDiarias = [];
+    const labelsDiarios = [];
+
+    // Lógica por dia
+    for (let i = 1; i <= diasNoMes; i++) {
+        let concluidosNoDia = 0;
+        habitos.forEach(h => {
+            if (h.checks && h.checks[i]) concluidosNoDia++;
+        });
+        const percDia = habitos.length > 0 ? (concluidosNoDia / habitos.length) * 100 : 0;
+        porcentagensDiarias.push(percDia.toFixed(1));
+        labelsDiarios.push(i);
+    }
+
+    // Renderizar linhas
     habitos.forEach(h => {
         let tr = document.createElement('tr');
         let html = `<td class="habit-name ${modoExclusao ? 'deletable' : ''}" 
@@ -89,18 +102,25 @@ function renderizarTabela(habitos) {
                     </td>`;
         for (let i = 1; i <= diasNoMes; i++) {
             const isChecked = h.checks && h.checks[i];
-            if(isChecked) totalChecks++;
+            if(isChecked) totalChecksMensal++;
             html += `<td><div class="check-container ${isChecked?'checked':''}" onclick="toggleCheck('${h.nome}', ${i}, ${!!isChecked})"></div></td>`;
         }
         tr.innerHTML = html;
         grid.appendChild(tr);
     });
 
-    const percent = totalPossivel > 0 ? Math.round((totalChecks / totalPossivel) * 100) : 0;
+    // Atualizar Pizza
+    const percent = totalPossivelMensal > 0 ? Math.round((totalChecksMensal / totalPossivelMensal) * 100) : 0;
     document.getElementById('chart-percent').innerText = percent + "%";
     if(pizzaChart) {
-        pizzaChart.data.datasets[0].data = [totalChecks, totalPossivel - totalChecks];
+        pizzaChart.data.datasets[0].data = [totalChecksMensal, totalPossivelMensal - totalChecksMensal];
         pizzaChart.update();
+    }
+
+    // Atualizar Gráfico Diário
+    if (dailyChart) {
+        dailyChart.data.datasets[0].data = porcentagensDiarias;
+        dailyChart.update();
     }
 }
 
@@ -118,24 +138,16 @@ onAuthStateChanged(auth, (user) => {
         appContent.style.display = 'block';
         document.getElementById('user-display').innerText = user.displayName || "Usuário";
         
-        // --- LÓGICA DE AVATAR À PROVA DE FALHAS ---
-        // 1. Gera o link reserva (UI-Avatars) primeiro
         const backupAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'U')}&background=3b82f6&color=fff`;
         
-        // 2. Tenta a foto do Google em alta qualidade
         if (user.photoURL) {
-            const highResPhoto = user.photoURL.replace("s96-c", "s192-c");
-            avatar.src = highResPhoto;
-            
-            // Se a imagem do Google falhar ao carregar (erro 403 ou link quebrado), usa o backup
-            avatar.onerror = () => {
-                avatar.src = backupAvatar;
-            };
+            avatar.src = user.photoURL.replace("s96-c", "s192-c");
+            avatar.onerror = () => avatar.src = backupAvatar;
         } else {
             avatar.src = backupAvatar;
         }
 
-        initChart();
+        initCharts();
         
         onSnapshot(collection(db, "users", user.uid, "habits"), (snap) => {
             renderizarTabela(snap.docs.map(d => d.data()));
@@ -150,15 +162,12 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// Evento do botão de login (coloque fora do onAuthStateChanged)
 document.getElementById('btn-login-google').addEventListener('click', () => {
     signInWithPopup(auth, googleProvider).catch(err => {
-        console.error("Erro no login:", err);
         showAlert("Erro ao entrar com Google");
     });
 });
 
-// Helpers
 window.toggleMenu = () => document.getElementById('profile-menu').classList.toggle('show');
 window.logout = () => signOut(auth);
 window.showAlert = (msg) => {
@@ -166,15 +175,41 @@ window.showAlert = (msg) => {
     b.innerText = msg; b.style.display = 'block';
     setTimeout(() => b.style.display = 'none', 3000);
 };
-function initChart() {
-    const ctx = document.getElementById('pizzaChart').getContext('2d');
+
+function initCharts() {
+    // Pizza
+    const ctxP = document.getElementById('pizzaChart').getContext('2d');
     if(pizzaChart) pizzaChart.destroy();
-    pizzaChart = new Chart(ctx, {
+    pizzaChart = new Chart(ctxP, {
         type: 'doughnut',
         data: {
             labels: ['Feito', 'Restante'],
             datasets: [{ data: [0, 100], backgroundColor: ['#3b82f6', '#f3f4f6'], borderWidth: 0, cutout: '75%' }]
         },
         options: { plugins: { legend: { display: false } } }
+    });
+
+    // Diário (Barras)
+    const ctxD = document.getElementById('dailyChart').getContext('2d');
+    if(dailyChart) dailyChart.destroy();
+    dailyChart = new Chart(ctxD, {
+        type: 'bar',
+        data: {
+            labels: Array.from({length: diasNoMes}, (_, i) => i + 1),
+            datasets: [{
+                label: '% do dia',
+                data: [],
+                backgroundColor: '#3b82f6',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
+                x: { grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
+        }
     });
 }
