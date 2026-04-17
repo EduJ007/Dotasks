@@ -74,6 +74,8 @@ window.toggleModoExcluir = () => {
     btn.style.color = modoExcluir ? "white" : "#ef4444";
     confirmBtn.style.display = modoExcluir ? "block" : "none";
     renderTabela();
+    const tbody = document.getElementById('table-body');
+    tbody.classList.toggle('modo-exclusao-ativo');
 };
 
 window.excluirSelecionados = async () => {
