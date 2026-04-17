@@ -55,20 +55,20 @@
     .habit-row { transition: 0.2s; }
     
     /* Efeito quando o modo exclusão está ativo */
-    .modo-exclusao-ativo .habit-row {
-    cursor: pointer;
-    user-select: none; /* Impede que o texto fique azul ao clicar rápido */
+   .modo-exclusao-ativo .habit-row, 
+.modo-exclusao-ativo .habit-row td, 
+.modo-exclusao-ativo .habit-name {
+    cursor: pointer !important;
 }
 
-/* O efeito visual que você já tem, reforçado */
+/* Impede seleção de texto pra não ficar azul ao clicar rápido */
+.modo-exclusao-ativo {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
 .modo-exclusao-ativo .habit-row:hover { 
     background-color: #fff1f2 !important; 
-    transition: background 0.2s;
-}
-
-/* Garante que o nome do hábito não herde o cursor de texto */
-.modo-exclusao-ativo .habit-name {
-    cursor: pointer;
 }
     .habit-row.selected-to-delete { background: #fee2e2 !important; }
     .habit-name { text-align: left; font-weight: 700; width: 200px; }
