@@ -3,92 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DoTasks</title>
+    <title>Suas Tárefas</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="shortcut icon" href="Favicon/favicon.ico" type="image/x-icon">
     <style>
         :root { --primary-blue: #3b82f6; --bg-body: #d1d5db; }
-        #loader { position: fixed; inset: 0; background: var(--bg-body); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s; }
-        .spinner { width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.3); border-top-color: var(--primary-blue); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        body { background-color: var(--bg-body); color: #1f2937; font-family: 'Inter', sans-serif; margin: 0; padding: 20px; overflow-x: hidden; }
-        .main-wrapper { max-width: 1900px; margin: 0 auto; position: relative; }
-        .header-minimal { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; justify-content: flex-end; align-items: center; pointer-events: none; }
-        .profile-trigger { pointer-events: auto; display: flex; align-items: center; gap: 12px; cursor: pointer; background: white; padding: 8px 18px; border-radius: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .avatar-img { width: 45px; height: 45px; border-radius: 50%; background: #e5e7eb; object-fit: cover; border: 2px solid white; }
-        .dropdown-menu { position: absolute; top: 60px; right: 0; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; width: 220px; z-index: 100; overflow: hidden; }
-        .dropdown-menu button { width: 100%; padding: 15px; border: none; background: none; text-align: left; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
-        .dropdown-menu button:hover { background: #f3f4f6; }
-        .show { display: block; }
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 380px; gap: 40px; align-items: start; margin-top: 80px; }
+        body { background-color: var(--bg-body); color: #1f2937; font-family: 'Inter', sans-serif; margin: 0; padding: 20px; }
+        
+        .main-wrapper { max-width: 1800px; margin: 0 auto; }
+        
+        /* Dashboard mais para cima */
+        .dashboard-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 450px; /* Gráfico diário agora tem mais espaço */
+            gap: 30px; 
+            align-items: start; 
+            margin-top: 40px; /* Reduzido de 80px para 40px */
+        }
+
         .table-area { position: relative; padding-left: 80px; }
-        .external-controls { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; gap: 15px; align-items: center; }
-        .side-btn { width: 60px; height: 60px; background: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: 0.3s; border: none; font-weight: bold; }
+        .external-controls { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; gap: 15px; }
+        
+        .side-btn { width: 60px; height: 60px; background: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-weight: bold; transition: 0.2s; }
         .btn-add { color: #10b981; font-size: 2.5rem; }
         .btn-del { color: #ef4444; font-size: 1.8rem; }
-        .nav-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: white; padding: 15px 25px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .table-card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        th { color: #9ca3af; font-size: 0.9rem; padding-bottom: 20px; border-bottom: 1px solid #f3f4f6; width: 40px; }
-        td { padding: 15px 5px; border-bottom: 1px solid #f9fafb; text-align: center; }
-        .habit-name { text-align: left; font-weight: 700; color: #374151; font-size: 1rem; width: 180px; min-width: 180px; }
-        .habit-name.deletable { cursor: pointer; color: #ef4444; }
-        .check-container { width: 24px; height: 24px; background-color: #e5e7eb; border-radius: 6px; cursor: pointer; margin: 0 auto; position: relative; transition: 0.2s; }
-        .check-container.checked { background-color: var(--primary-blue); transform: scale(1.1); }
-        .check-container.checked::after { content: '✓'; color: white; position: absolute; left: 6px; top: 1px; font-size: 14px; font-weight: bold; }
-        .pizza-card { background: white; padding: 35px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .pizza-title { color: #9ca3af; font-size: 0.75rem; letter-spacing: 1.5px; font-weight: 700; margin-bottom: 20px; text-transform: uppercase; }
-        #chart-percent { font-size: 2.5rem; font-weight: 800; color: var(--primary-blue); margin-top: 25px; }
-        #input-modal, #delete-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(4px); }
-        .modal-content, .delete-card { background: white; padding: 30px; border-radius: 20px; width: 380px; text-align: center; }
+
+        .nav-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: white; padding: 12px 25px; border-radius: 15px; }
+
+        .table-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { color: #9ca3af; font-size: 0.8rem; padding-bottom: 15px; border-bottom: 1px solid #f3f4f6; }
+        td { padding: 12px 4px; border-bottom: 1px solid #f9fafb; text-align: center; }
+
+        .habit-name { text-align: left; font-weight: 700; color: #374151; width: 180px; cursor: default; }
+        /* Estilo quando o modo exclusão está ON */
+        .modo-excluir-ativo .habit-name { color: #ef4444; cursor: pointer; text-decoration: underline; }
+        .modo-excluir-ativo .habit-name:hover { background: #fee2e2; border-radius: 5px; }
+
+        .check-container { width: 22px; height: 22px; background-color: #e5e7eb; border-radius: 6px; cursor: pointer; margin: 0 auto; position: relative; }
+        .check-container.checked { background-color: var(--primary-blue); }
+        .check-container.checked::after { content: '✓'; color: white; position: absolute; left: 5px; top: 0; font-size: 14px; }
+
+        .pizza-card { background: white; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .pizza-title { color: #9ca3af; font-size: 0.7rem; letter-spacing: 1.2px; font-weight: 700; text-transform: uppercase; margin-bottom: 15px; }
+        
+        #input-modal, #delete-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 350px; text-align: center; }
         .modal-input { width: 100%; padding: 12px; margin: 20px 0; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; }
-        .btn-confirm { background: var(--primary-blue); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-weight: bold; cursor: pointer; flex: 1; }
-        .btn-confirm-del { background: #ef4444; color: white; border: none; padding: 12px 25px; border-radius: 12px; font-weight: bold; cursor: pointer; flex: 1; }
-        .btn-cancel { background: #f3f4f6; color: #4b5563; border: none; padding: 12px 25px; border-radius: 12px; font-weight: bold; cursor: pointer; flex: 1; }
-        #custom-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10000; display: none; padding: 15px 25px; background: #1f2937; color: white; border-radius: 12px; font-weight: 600; }
+        
+        #custom-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10001; display: none; padding: 12px 25px; background: #1f2937; color: white; border-radius: 10px; }
+        
+        .header-minimal { display: flex; justify-content: flex-end; padding: 10px; }
+        .profile-trigger { display: flex; align-items: center; gap: 10px; cursor: pointer; background: white; padding: 5px 15px; border-radius: 30px; }
+        .avatar-img { width: 35px; height: 35px; border-radius: 50%; }
     </style>
 </head>
 <body>
 
-    <div id="loader"><div class="spinner"></div><p style="margin-top:15px; font-weight:600; color:#6b7280;">Sincronizando...</p></div>
     <div id="custom-alert"></div>
-
-    <div id="login-modal" style="display: none; position: fixed; inset: 0; background: var(--bg-body); z-index: 10000; align-items: center; justify-content: center;">
-        <div style="background: white; padding: 40px; border-radius: 30px; text-align: center; width: 350px;">
-            <div style="font-size: 3rem; margin-bottom: 10px;">🚀</div>
-            <h1 style="font-size: 1.5rem; margin-bottom: 10px;">Bem-vindo!</h1>
-            <button id="btn-login-google" style="display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 12px; border: 2px solid #e5e7eb; border-radius: 12px; background: white; font-weight: 600; cursor: pointer;">
-                Entrar com Google
-            </button>
-        </div>
-    </div>
 
     <div id="input-modal">
         <div class="modal-content">
-            <h3 style="margin:0;">Novo Hábito</h3>
-            <input type="text" id="modalHabitInput" class="modal-input" placeholder="Ex: Estudar Inglês">
-            <div style="display:flex; gap:10px;"><button class="btn-cancel" onclick="closeModal()">Cancelar</button><button class="btn-confirm" onclick="confirmarNovoHabito()">Adicionar</button></div>
+            <h3>Novo Hábito</h3>
+            <input type="text" id="modalHabitInput" class="modal-input" placeholder="Ex: Treinar">
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeModal()" style="flex:1; padding:10px; border:none; border-radius:8px; cursor:pointer;">Cancelar</button>
+                <button onclick="confirmarNovoHabito()" style="flex:1; padding:10px; background:var(--primary-blue); color:white; border:none; border-radius:8px; cursor:pointer;">Adicionar</button>
+            </div>
         </div>
     </div>
 
     <div id="delete-modal">
-        <div class="delete-card">
-            <div style="font-size: 3rem; margin-bottom: 10px;">🗑️</div>
+        <div class="modal-content">
             <h3>Excluir Hábito?</h3>
-            <p style="color: #6b7280; margin-bottom: 25px;">Remover <b id="habit-to-del-name"></b>?</p>
-            <div style="display: flex; gap: 10px;"><button class="btn-cancel" onclick="closeDeleteModal()">Não</button><button class="btn-confirm-del" onclick="confirmarExclusao()">Sim</button></div>
+            <p id="habit-to-del-name" style="font-weight:bold; color:#ef4444;"></p>
+            <div style="display:flex; gap:10px;">
+                <button onclick="closeDeleteModal()" style="flex:1; padding:10px; border:none; border-radius:8px; cursor:pointer;">Não</button>
+                <button onclick="confirmarExclusao()" style="flex:1; padding:10px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer;">Sim, excluir</button>
+            </div>
         </div>
     </div>
 
-    <div id="app-content" style="display: none;" class="main-wrapper">
+    <div id="login-modal" style="display:none; height:100vh; align-items:center; justify-content:center;">
+        <button id="btn-login-google" style="padding:15px 30px; font-size:1rem; cursor:pointer; border-radius:10px; border:none; background:white; box-shadow:0 4px 10px rgba(0,0,0,0.1);">Entrar com Google</button>
+    </div>
+
+    <div id="app-content" style="display:none;" class="main-wrapper">
         <div class="header-minimal">
-            <div class="profile-trigger" onclick="toggleMenu()">
-                <span id="user-display" style="font-weight:700; color:#4b5563;">Usuário</span>
+            <div class="profile-trigger" onclick="logout()">
+                <span id="user-display">Usuário</span>
                 <img id="user-avatar" class="avatar-img" src="" alt="">
-                <div id="profile-menu" class="dropdown-menu">
-                    <button onclick="logout()" style="color:#ef4444; font-weight:bold;">🚪 Sair</button>
-                </div>
             </div>
         </div>
 
@@ -100,17 +104,15 @@
                 </div>
 
                 <div class="nav-controls">
-                    <div style="font-weight: 700; color: #4b5563;">
-                        Dias: <span id="dia-inicio-label">1</span> - <span id="dia-fim-label">21</span> <small style="color:#9ca3af; margin-left:10px;">de 365</small>
-                    </div>
-                    <div style="display: flex; gap: 10px;">
-                        <button onclick="mudarPaginaDias(-1)" class="side-btn" style="width: 40px; height: 40px; border-radius: 10px;">←</button>
-                        <button onclick="mudarPaginaDias(1)" class="side-btn" style="width: 40px; height: 40px; border-radius: 10px;">→</button>
+                    <div style="font-weight:700;">Dias <span id="dia-inicio-label">1</span> - <span id="dia-fim-label">21</span> <small style="color:#9ca3af;">de 365</small></div>
+                    <div style="display:flex; gap:8px;">
+                        <button onclick="mudarPaginaDias(-1)" class="side-btn" style="width:35px; height:35px; border-radius:8px;">←</button>
+                        <button onclick="mudarPaginaDias(1)" class="side-btn" style="width:35px; height:35px; border-radius:8px;">→</button>
                     </div>
                 </div>
 
                 <div class="table-card">
-                    <table>
+                    <table id="tabela-habitos-main">
                         <thead><tr id="header-row"></tr></thead>
                         <tbody id="habit-grid"></tbody>
                     </table>
@@ -119,13 +121,13 @@
 
             <div class="charts-area">
                 <div class="pizza-card">
-                    <h3 class="pizza-title" id="ciclo-label">Progresso do Mês</h3>
-                    <canvas id="pizzaChart"></canvas>
+                    <h3 class="pizza-title" id="ciclo-label">Mês Atual</h3>
+                    <canvas id="pizzaChart" width="200" height="200"></canvas>
                     <div id="chart-percent">0%</div>
                 </div>
-                <div class="pizza-card" style="margin-top: 20px;">
-                    <h3 class="pizza-title">Foco nos 21 Dias</h3>
-                    <canvas id="dailyChart"></canvas>
+                <div class="pizza-card">
+                    <h3 class="pizza-title">Progresso Diário</h3>
+                    <canvas id="dailyChart" width="350" height="250"></canvas>
                 </div>
             </div>
         </div>
