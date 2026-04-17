@@ -20,8 +20,17 @@ let habits = [];
 let selectedHabits = new Set();
 let modoExcluir = false;
 let diaInicio = 1;
-let pChart; // Pizza (Mensal)
-let bChart; // Barras (Diário)
+let pChart; 
+let bChart; 
+
+// --- FUNÇÃO PARA ESCONDER O LOADER ---
+function hideLoader() {
+    const loader = document.getElementById('loader-overlay');
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.visibility = 'hidden', 500);
+    }
+}
 
 // --- LOGIN ---
 window.loginGoogle = async () => {
@@ -55,6 +64,11 @@ window.addHabito = async () => {
     input.value = '';
     window.fecharModais();
 };
+
+// ADIÇÃO: ESCUTAR TECLA ENTER NO INPUT
+document.getElementById('habit-name-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') window.addHabito();
+});
 
 window.selecionarHabito = (nome) => {
     if (!modoExcluir) return;
@@ -91,7 +105,14 @@ window.excluirSelecionados = async () => {
 
 // --- UI/MODAIS ---
 window.abrirPerfil = () => document.getElementById('modal-perfil').style.display = 'flex';
-window.abrirHabitModal = () => document.getElementById('modal-habit').style.display = 'flex';
+
+window.abrirHabitModal = () => {
+    const modal = document.getElementById('modal-habit');
+    modal.style.display = 'flex';
+    // ADIÇÃO: Focar no campo de texto automaticamente
+    setTimeout(() => document.getElementById('habit-name-input').focus(), 100);
+};
+
 window.fecharModais = () => document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
 window.logout = () => signOut(auth).then(() => location.reload());
 window.showAlert = (m) => {
@@ -113,11 +134,7 @@ function renderTabela() {
     for (let i = diaInicio; i <= diaFim; i++) head.innerHTML += `<th>${i}</th>`;
 
     body.innerHTML = "";
-    
-    // Dados para o Gráfico de Barras (Progresso Diário da página atual)
     const progressoDiario = Array(21).fill(0);
-    
-    // Dados para o Gráfico de Pizza (Progresso Mensal)
     let totalChecksMes = 0;
     const mesInicio = Math.floor((diaInicio - 1) / 30) * 30 + 1;
     const mesFim = mesInicio + 29;
@@ -135,7 +152,6 @@ function renderTabela() {
             html += `<td><div class="check-box ${checked ? 'checked' : ''}" onclick="window.toggleCheck('${h.nome}', ${i}, ${!!checked})">${checked ? 'X' : ''}</div></td>`;
         }
         
-        // Cálculo Mensal
         if (h.checks) {
             Object.keys(h.checks).forEach(d => {
                 if (d >= mesInicio && d <= mesFim && h.checks[d]) totalChecksMes++;
@@ -149,7 +165,6 @@ function renderTabela() {
 }
 
 function updateCharts(checks, totalH, inMes, fiMes, dadosBarras) {
-    // 1. Update Pizza (Mensal)
     const totalPosMes = totalH * 30;
     const percMes = totalPosMes > 0 ? Math.round((checks / totalPosMes) * 100) : 0;
     document.getElementById('perc-text').innerText = percMes + "%";
@@ -160,10 +175,8 @@ function updateCharts(checks, totalH, inMes, fiMes, dadosBarras) {
         pChart.update();
     }
 
-    // 2. Update Barras (Diário)
     if (bChart) {
         bChart.data.labels = Array.from({length: 21}, (_, i) => i + diaInicio);
-        // Converte quantidade de checks em porcentagem do dia
         bChart.data.datasets[0].data = dadosBarras.map(v => totalH > 0 ? (v / totalH) * 100 : 0);
         bChart.update();
     }
@@ -171,6 +184,9 @@ function updateCharts(checks, totalH, inMes, fiMes, dadosBarras) {
 
 // --- MONITORAMENTO FIREBASE ---
 onAuthStateChanged(auth, (user) => {
+    // ESCONDE O LOADER ASSIM QUE O FIREBASE RESPONDER
+    hideLoader();
+
     if (user) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
@@ -190,7 +206,6 @@ onAuthStateChanged(auth, (user) => {
 });
 
 function initCharts() {
-    // Pizza
     const ctxP = document.getElementById('chartPizza');
     if (ctxP && !pChart) {
         pChart = new Chart(ctxP, {
@@ -199,7 +214,6 @@ function initCharts() {
             options: { plugins: { legend: { display: false } }, maintainAspectRatio: false }
         });
     }
-    // Barras
     const ctxB = document.getElementById('chartBarra');
     if (ctxB && !bChart) {
         bChart = new Chart(ctxB, {
