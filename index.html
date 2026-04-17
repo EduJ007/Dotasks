@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suas Tarefas</title>
+    <title>Suas Tárefas</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="shortcut icon" href="Favicon/favicon.ico" type="image/x-icon">
@@ -27,14 +27,14 @@
     .btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; border: none; border-radius: 12px; background: white; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
     .btn-google:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
 
-    .main-wrapper { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .main-wrapper { max-width: 2000px; margin: 0 auto; padding: 20px; }
     
     /* Nova Barra de Controles Superior */
     .control-center { 
         display: flex; 
         justify-content: space-between; 
         align-items: center; 
-        margin-bottom: 20px; 
+        margin-bottom: 10px; 
         gap: 15px;
     }
     .action-group { display: flex; gap: 12px; align-items: center; }
@@ -119,9 +119,16 @@
                 <div class="nav-header">
                     <div class="page-info">Dias <span id="label-inicio">1</span> - <span id="label-fim">21</span> <small>/ 365</small></div>
                     <div style="display:flex; gap:10px;">
-                        <button class="btn-action" style="width:40px; height:40px; border-radius:12px;" onclick="window.navegarDias(-1)">←</button>
-                        <button class="btn-action" style="width:40px; height:40px; border-radius:12px;" onclick="window.navegarDias(1)">→</button>
-                    </div>
+                       <button class="btn-action" style="width:40px; height:40px; border-radius:12px;" onclick="window.navegarDias(-1)" title="Anterior">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 18l-6-6 6-6"/>
+            </svg>
+        </button>
+                        <button class="btn-action" style="width:40px; height:40px; border-radius:12px;" onclick="window.navegarDias(1)" title="Próximo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18l6-6-6-6"/>
+            </svg>
+        </button>
                 </div>
 
                 <div class="table-container">
