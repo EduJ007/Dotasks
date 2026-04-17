@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suas Tárefas</title>
+    <title>Suas Tarefas</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="shortcut icon" href="Favicon/favicon.ico" type="image/x-icon">
@@ -29,7 +29,6 @@
 
     .main-wrapper { max-width: 2000px; margin: 0 auto; padding: 20px; }
     
-    /* Nova Barra de Controles Superior */
     .control-center { 
         display: flex; 
         justify-content: space-between; 
@@ -39,49 +38,36 @@
     }
     .action-group { display: flex; gap: 12px; align-items: center; }
 
-    /* Header & Profile */
     .user-pill { background: white; padding: 8px 20px; border-radius: 50px; display: flex; align-items: center; gap: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     .user-pill img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
 
-    /* Botões de Ação */
     .btn-action { width: 50px; height: 50px; border-radius: 14px; border: none; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; font-size: 1.2rem; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
     .btn-action:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.12); }
     
-    /* Dashboard */
-    .dashboard { display: grid; grid-template-columns: 1fr 400px; gap: 25px; }
+    /* Dashboard Grid */
+    .dashboard { display: grid; grid-template-columns: 1fr 400px; gap: 25px; align-items: start; }
     .table-section { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
     
     .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .page-info { font-weight: 800; font-size: 1.1rem; color: #6b7280; }
 
-    /* Tabela */
     .table-container { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; min-width: 800px; }
     th { font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; padding: 12px; border-bottom: 1px solid #f3f4f6; }
     td { padding: 14px 8px; border-bottom: 1px solid #f9fafb; text-align: center; }
     
-    .habit-row { transition: 0.2s; }
-    .habit-row.selected-to-delete { background: #fee2e2 !important; }
     .habit-name { text-align: left; font-weight: 700; width: 200px; }
 
-    /* Checkbox */
-    .check-box { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto; font-weight: 800; font-size: 14px; color: transparent; transition: 0.2s; }
+    .check-box { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto; transition: 0.2s; }
     .check-box.checked { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
 
-    /* Gráficos */
+    /* Estatísticas */
     .stats-section { display: flex; flex-direction: column; gap: 20px; }
-    .pizza-card { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); text-align: center; min-height: 320px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .pizza-card { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); text-align: center; }
     .pizza-title { margin: 0 0 15px 0; font-weight: 800; color: #6b7280; }
-    canvas { max-width: 100% !important; max-height: 200px !important; }
-
-    /* Modais */
-    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 10000; }
-    .modal-card { background: white; padding: 35px; border-radius: 24px; width: 360px; text-align: center; }
-    .input-std { width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #f3f4f6; border-radius: 12px; outline: none; box-sizing: border-box; }
+    canvas { max-width: 100% !important; }
     
-    .btn-main { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; background: var(--primary); color: white; margin-top: 10px; }
     .btn-confirm-del { background: var(--danger); color: white; padding: 10px 20px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: none; }
-    
     #custom-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 12px 25px; border-radius: 12px; display: none; z-index: 30000; }
     </style>
 </head>
@@ -93,9 +79,7 @@
         <div class="login-card">
             <h1 style="margin:0; font-size: 2.2rem; font-weight: 800; color: #1e3a8a;">DoTasks</h1>
             <p style="color:#64748b; margin-bottom: 35px; font-size: 0.95rem;">Sua jornada de 365 dias começa aqui.</p>
-            <button class="btn-google" onclick="window.loginGoogle()">
-                Entrar com Google
-            </button>
+            <button class="btn-google" onclick="window.loginGoogle()">Entrar com Google</button>
         </div>
     </div>
 
@@ -119,16 +103,13 @@
                 <div class="nav-header">
                     <div class="page-info">Dias <span id="label-inicio">1</span> - <span id="label-fim">21</span> <small>/ 365</small></div>
                     <div style="display:flex; gap:10px;">
-                       <button class="btn-action" style="width:40px; height:40px; border-radius:12px;" onclick="window.navegarDias(-1)" title="Anterior">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M15 18l-6-6 6-6"/>
-            </svg>
-        </button>
-                        <button class="btn-action" style="width:40px; height:40px; border-radius:12px;" onclick="window.navegarDias(1)" title="Próximo">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 18l6-6-6-6"/>
-            </svg>
-        </button>
+                        <button class="btn-action" style="width:40px; height:40px; border-radius:12px;" onclick="window.navegarDias(-1)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                        </button>
+                        <button class="btn-action" style="width:40px; height:40px; border-radius:12px;" onclick="window.navegarDias(1)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="table-container">
@@ -137,9 +118,7 @@
                         <tbody id="table-body"></tbody>
                     </table>
                 </div>
-            </div>
-
-            <div class="stats-section">
+            </div> <div class="stats-section">
                 <div class="pizza-card">
                     <h4 class="pizza-title" id="mes-label">Mês Atual</h4>
                     <canvas id="chartPizza"></canvas>
