@@ -14,61 +14,79 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
-// Estado Global
+// Variáveis de controle
 let habits = [];
 let selectedHabits = new Set();
 let modoExcluir = false;
 let diaInicio = 1;
-let pChart, bChart;
+let pChart;
 
-// --- FUNÇÕES DE NAVEGAÇÃO ---
+// --- LOGIN ---
+const loginBtn = document.getElementById('btn-login-google-real');
+if (loginBtn) {
+    loginBtn.onclick = async () => {
+        try {
+            await signInWithPopup(auth, provider);
+        } catch (error) {
+            console.error("Erro no login:", error);
+            alert("Erro ao entrar com Google. Verifique o console.");
+        }
+    };
+}
+
+// --- LOGOUT ---
+window.logout = () => {
+    signOut(auth).then(() => {
+        window.location.reload(); // Recarrega para limpar estados
+    });
+};
+
+// --- NAVEGAÇÃO (FIX DAS SETAS) ---
 window.navegarDias = (dir) => {
-    const novo = diaInicio + (dir * 21);
-    if(novo >= 1 && novo <= 345) {
-        diaInicio = novo;
-        renderTabela();
+    const novoInicio = diaInicio + (dir * 21);
+    // Limites: não menos que 1, não mais que 345 (para mostrar até 365)
+    if (novoInicio >= 1 && novoInicio <= 345) {
+        diaInicio = novoInicio;
+        renderTabela(); 
     }
 };
 
-// --- MODAIS ---
+// --- RESTO DA LÓGICA (MODAIS E EXCLUSÃO) ---
 window.fecharModais = () => {
     document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
 };
+
 window.abrirPerfil = () => {
-    document.getElementById('profile-preview').src = auth.currentUser.photoURL;
+    document.getElementById('profile-preview').src = auth.currentUser.photoURL || 'https://via.placeholder.com/80';
     document.getElementById('modal-perfil').style.display = 'flex';
 };
+
 window.abrirHabitModal = () => document.getElementById('modal-habit').style.display = 'flex';
 
-window.salvarFoto = async () => {
-    const url = document.getElementById('input-photo-url').value;
-    if(!url) return;
-    // Aqui no Firebase Auth real precisaria de updateProfile, 
-    // mas para fins de UI, vamos salvar no localStorage ou apenas simular
-    document.getElementById('user-img').src = url;
-    fecharModais();
-    showAlert("Foto atualizada!");
-};
-
-// --- LOGICA DE EXCLUSÃO ---
 window.toggleModoExcluir = () => {
     modoExcluir = !modoExcluir;
     selectedHabits.clear();
     const btn = document.getElementById('del-toggle');
     const confirmBtn = document.getElementById('btn-confirm-delete');
     
-    btn.style.background = modoExcluir ? "#ef4444" : "white";
-    btn.style.color = modoExcluir ? "white" : "#ef4444";
-    confirmBtn.style.display = modoExcluir ? "block" : "none";
-    confirmBtn.innerText = `Excluir Selecionados (0)`;
-    
+    if (modoExcluir) {
+        btn.style.background = "#ef4444";
+        btn.style.color = "white";
+        confirmBtn.style.display = "block";
+        showAlert("Selecione os nomes para excluir");
+    } else {
+        btn.style.background = "white";
+        btn.style.color = "#ef4444";
+        confirmBtn.style.display = "none";
+    }
     renderTabela();
 };
 
 window.selecionarHabito = (nome) => {
-    if(!modoExcluir) return;
-    if(selectedHabits.has(nome)) selectedHabits.delete(nome);
+    if (!modoExcluir) return;
+    if (selectedHabits.has(nome)) selectedHabits.delete(nome);
     else selectedHabits.add(nome);
     
     document.getElementById('btn-confirm-delete').innerText = `Excluir Selecionados (${selectedHabits.size})`;
@@ -76,8 +94,8 @@ window.selecionarHabito = (nome) => {
 };
 
 window.excluirSelecionados = async () => {
-    if(selectedHabits.size === 0) return;
-    if(!confirm(`Excluir ${selectedHabits.size} hábitos permanentemente?`)) return;
+    if (selectedHabits.size === 0) return;
+    if (!confirm(`Excluir ${selectedHabits.size} hábitos?`)) return;
 
     const batch = writeBatch(db);
     selectedHabits.forEach(nome => {
@@ -87,39 +105,43 @@ window.excluirSelecionados = async () => {
 
     await batch.commit();
     toggleModoExcluir();
-    showAlert("Hábitos removidos!");
+    showAlert("Removidos com sucesso!");
 };
 
-// --- CORE ---
 window.addHabito = async () => {
     const nome = document.getElementById('habit-name-input').value;
-    if(!nome) return;
+    if (!nome) return;
     await setDoc(doc(db, "users", auth.currentUser.uid, "habits", nome), { nome, checks: {} });
     document.getElementById('habit-name-input').value = '';
     fecharModais();
 };
 
 window.toggleCheck = async (habNome, dia, status) => {
-    if(modoExcluir) return;
+    if (modoExcluir) return;
     const ref = doc(db, "users", auth.currentUser.uid, "habits", habNome);
-    const obj = {}; obj[`checks.${dia}`] = !status;
+    const obj = {}; 
+    obj[`checks.${dia}`] = !status;
     await updateDoc(ref, obj);
 };
 
+// --- RENDERIZAÇÃO ---
 function renderTabela() {
     const head = document.getElementById('table-head');
     const body = document.getElementById('table-body');
-    const diaFim = diaInicio + 20;
+    if (!head || !body) return;
 
+    const diaFim = Math.min(diaInicio + 20, 365);
     document.getElementById('label-inicio').innerText = diaInicio;
     document.getElementById('label-fim').innerText = diaFim;
 
     head.innerHTML = '<th>Hábito</th>';
-    for(let i=diaInicio; i<=diaFim; i++) head.innerHTML += `<th>${i}</th>`;
+    for (let i = diaInicio; i <= diaFim; i++) {
+        head.innerHTML += `<th>${i}</th>`;
+    }
 
     body.innerHTML = "";
     let totalChecksMes = 0;
-    const mesInicio = Math.floor((diaInicio-1)/30) * 30 + 1;
+    const mesInicio = Math.floor((diaInicio - 1) / 30) * 30 + 1;
     const mesFim = mesInicio + 29;
 
     habits.forEach(h => {
@@ -127,19 +149,20 @@ function renderTabela() {
         let tr = document.createElement('tr');
         tr.className = `habit-row ${isSelected ? 'selected-to-delete' : ''}`;
         
-        let html = `<td class="habit-name" onclick="selecionarHabito('${h.nome}')">${h.nome}</td>`;
+        // Clique no nome para excluir
+        let html = `<td class="habit-name" onclick="selecionarHabito('${h.nome}')" style="cursor: ${modoExcluir ? 'pointer' : 'default'}">${h.nome}</td>`;
         
-        for(let i=diaInicio; i<=diaFim; i++) {
+        for (let i = diaInicio; i <= diaFim; i++) {
             const checked = h.checks && h.checks[i];
-            html += `<td><div class="check-box ${checked?'checked':''}" onclick="toggleCheck('${h.nome}', ${i}, ${!!checked})">X</div></td>`;
+            // Renderiza o "X" azul se estiver marcado
+            html += `<td><div class="check-box ${checked ? 'checked' : ''}" onclick="toggleCheck('${h.nome}', ${i}, ${!!checked})">${checked ? 'X' : ''}</div></td>`;
         }
         
-        if(h.checks) {
+        if (h.checks) {
             Object.keys(h.checks).forEach(d => {
-                if(d >= mesInicio && d <= mesFim && h.checks[d]) totalChecksMes++;
+                if (d >= mesInicio && d <= mesFim && h.checks[d]) totalChecksMes++;
             });
         }
-
         tr.innerHTML = html;
         body.appendChild(tr);
     });
@@ -149,24 +172,30 @@ function renderTabela() {
 
 function updateCharts(checks, totalH, inMes, fiMes) {
     const totalPos = totalH * 30;
-    const perc = totalPos > 0 ? Math.round((checks/totalPos)*100) : 0;
-    document.getElementById('perc-text').innerText = perc + "%";
-    document.getElementById('mes-label').innerText = `Dias ${inMes} - ${fiMes}`;
+    const perc = totalPos > 0 ? Math.round((checks / totalPos) * 100) : 0;
+    const percText = document.getElementById('perc-text');
+    if (percText) percText.innerText = perc + "%";
+    
+    const mesLabel = document.getElementById('mes-label');
+    if (mesLabel) mesLabel.innerText = `Ciclo: Dias ${inMes} - ${fiMes}`;
 
-    if(pChart) {
+    if (pChart) {
         pChart.data.datasets[0].data = [checks, Math.max(0, totalPos - checks)];
         pChart.update();
     }
 }
 
-// --- AUTH ---
+// --- INICIALIZAÇÃO E MONITORAMENTO ---
 onAuthStateChanged(auth, (user) => {
-    if(user) {
+    if (user) {
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
         document.getElementById('user-name').innerText = user.displayName;
-        document.getElementById('user-img').src = user.photoURL;
+        document.getElementById('user-img').src = user.photoURL || '';
+        
         initCharts();
+
+        // Escuta o banco de dados em tempo real
         onSnapshot(collection(db, "users", user.uid, "habits"), (snap) => {
             habits = snap.docs.map(d => d.data());
             renderTabela();
@@ -177,24 +206,19 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-document.getElementById('login-google').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
-window.logout = () => signOut(auth);
 window.showAlert = (m) => {
     const a = document.getElementById('custom-alert');
+    if (!a) return;
     a.innerText = m; a.style.display = 'block';
     setTimeout(() => a.style.display = 'none', 3000);
 };
 
 function initCharts() {
-    if(pChart) return;
-    pChart = new Chart(document.getElementById('chartPizza'), {
+    const ctx = document.getElementById('chartPizza');
+    if (!ctx || pChart) return;
+    pChart = new Chart(ctx, {
         type: 'doughnut',
-        data: { datasets: [{ data: [0, 100], backgroundColor: ['#3b82f6', '#f3f4f6'], borderWidth: 0, cutout: '80%' }] },
-        options: { plugins: { legend: { display: false } } }
-    });
-    bChart = new Chart(document.getElementById('chartBarra'), {
-        type: 'bar',
-        data: { labels: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'], datasets: [{ data: [10, 40, 30, 70, 50, 90, 20], backgroundColor: '#3b82f6', borderRadius: 10 }] },
-        options: { plugins: { legend: { display: false } }, scales: { y: { display: false } } }
+        data: { datasets: [{ data: [0, 100], backgroundColor: ['#3b82f6', '#f1f5f9'], borderWidth: 0, cutout: '80%' }] },
+        options: { plugins: { legend: { display: false } }, responsive: true }
     });
 }
