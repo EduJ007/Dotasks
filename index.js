@@ -15,16 +15,30 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let pizzaChart;
-let dailyChart;
-let modoExclusao = false;
-let habitoParaExcluir = null;
-const diasNoMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+let pizzaChart, dailyChart, modoExclusao = false, habitoParaExcluir = null;
+let diaInicioExibicao = 1;
+const diasPorPagina = 21;
+const totalDiasAno = 365;
 
-// --- SISTEMA DE MODAIS ---
+// --- NAVEGAÇÃO ---
+window.mudarPaginaDias = (dir) => {
+    const novoInicio = diaInicioExibicao + (dir * diasPorPagina);
+    if (novoInicio >= 1 && novoInicio <= (totalDiasAno - diasPorPagina + 1)) {
+        diaInicioExibicao = novoInicio;
+        atualizarDadosManualmente();
+    }
+};
+
+const atualizarDadosManualmente = () => {
+    const habitsRef = collection(db, "users", auth.currentUser.uid, "habits");
+    onSnapshot(habitsRef, (snap) => {
+        renderizarTabela(snap.docs.map(d => d.data()));
+    }, { onlyOnce: true });
+};
+
+// --- MODAIS ---
 window.openModal = () => document.getElementById('input-modal').style.display = 'flex';
 window.closeModal = () => document.getElementById('input-modal').style.display = 'none';
-
 window.openDeleteModal = (nome) => {
     habitoParaExcluir = nome;
     document.getElementById('habit-to-del-name').innerText = nome;
@@ -32,7 +46,7 @@ window.openDeleteModal = (nome) => {
 };
 window.closeDeleteModal = () => {
     document.getElementById('delete-modal').style.display = 'none';
-    ativarModoExclusao(); 
+    if(modoExclusao) ativarModoExclusao(); 
 };
 
 window.confirmarNovoHabito = async () => {
@@ -56,10 +70,9 @@ window.ativarModoExclusao = () => {
     const btn = document.getElementById('del-btn-toggle');
     btn.style.background = modoExclusao ? "#ef4444" : "white";
     btn.style.color = modoExclusao ? "white" : "#ef4444";
-    showAlert(modoExclusao ? "Clique no nome do hábito para apagar" : "Modo edição desativado");
+    atualizarDadosManualmente();
 };
 
-// --- CORE ---
 window.toggleCheck = async (n, d, s) => {
     if(modoExclusao) return;
     const ref = doc(db, "users", auth.currentUser.uid, "habits", n);
@@ -70,146 +83,109 @@ window.toggleCheck = async (n, d, s) => {
 function renderizarTabela(habitos) {
     const grid = document.getElementById('habit-grid');
     const head = document.getElementById('header-row');
+    const diaFim = Math.min(diaInicioExibicao + diasPorPagina - 1, totalDiasAno);
     
-    head.innerHTML = '<th style="text-align:left; padding-left:10px;">Hábito</th>';
-    for (let i = 1; i <= diasNoMes; i++) head.innerHTML += `<th>${i}</th>`;
+    document.getElementById('dia-inicio-label').innerText = diaInicioExibicao;
+    document.getElementById('dia-fim-label').innerText = diaFim;
+
+    head.innerHTML = '<th style="text-align:left;">Hábito</th>';
+    for (let i = diaInicioExibicao; i <= diaFim; i++) head.innerHTML += `<th>${i}</th>`;
 
     grid.innerHTML = "";
     let totalChecksMensal = 0;
-    let totalPossivelMensal = habitos.length * diasNoMes;
+    
+    // Lógica do Reset Mensal (Ciclo de 30 dias)
+    const mesAtual = Math.floor((diaInicioExibicao - 1) / 30);
+    const inicioMes = (mesAtual * 30) + 1;
+    const fimMes = inicioMes + 29;
+    document.getElementById('ciclo-label').innerText = `Mês: Dia ${inicioMes} ao ${fimMes}`;
 
-    // Para o gráfico diário
     const porcentagensDiarias = [];
     const labelsDiarios = [];
 
-    // Lógica por dia
-    for (let i = 1; i <= diasNoMes; i++) {
-        let concluidosNoDia = 0;
-        habitos.forEach(h => {
-            if (h.checks && h.checks[i]) concluidosNoDia++;
-        });
-        const percDia = habitos.length > 0 ? (concluidosNoDia / habitos.length) * 100 : 0;
-        porcentagensDiarias.push(percDia.toFixed(1));
+    // Prepara dados do gráfico de barras (apenas dos 21 dias na tela)
+    for (let i = diaInicioExibicao; i <= diaFim; i++) {
+        let concluidos = 0;
+        habitos.forEach(h => { if(h.checks && h.checks[i]) concluidos++; });
+        porcentagensDiarias.push(habitos.length > 0 ? (concluidos / habitos.length * 100).toFixed(1) : 0);
         labelsDiarios.push(i);
     }
 
-    // Renderizar linhas
     habitos.forEach(h => {
         let tr = document.createElement('tr');
         let html = `<td class="habit-name ${modoExclusao ? 'deletable' : ''}" 
-                        onclick="${modoExclusao ? `openDeleteModal('${h.nome}')` : ''}">
-                        ${h.nome}
-                    </td>`;
-        for (let i = 1; i <= diasNoMes; i++) {
+                        onclick="${modoExclusao ? `openDeleteModal('${h.nome}')` : ''}">${h.nome}</td>`;
+        
+        for (let i = diaInicioExibicao; i <= diaFim; i++) {
             const isChecked = h.checks && h.checks[i];
-            if(isChecked) totalChecksMensal++;
             html += `<td><div class="check-container ${isChecked?'checked':''}" onclick="toggleCheck('${h.nome}', ${i}, ${!!isChecked})"></div></td>`;
+        }
+
+        // Soma checks apenas do mês atual (30 dias) para a Pizza
+        if(h.checks) {
+            Object.keys(h.checks).forEach(d => {
+                if(d >= inicioMes && d <= fimMes && h.checks[d]) totalChecksMensal++;
+            });
         }
         tr.innerHTML = html;
         grid.appendChild(tr);
     });
 
-    // Atualizar Pizza
-    const percent = totalPossivelMensal > 0 ? Math.round((totalChecksMensal / totalPossivelMensal) * 100) : 0;
+    const totalPossivelMes = habitos.length * 30;
+    const percent = totalPossivelMes > 0 ? Math.round((totalChecksMensal / totalPossivelMes) * 100) : 0;
     document.getElementById('chart-percent').innerText = percent + "%";
+    
     if(pizzaChart) {
-        pizzaChart.data.datasets[0].data = [totalChecksMensal, totalPossivelMensal - totalChecksMensal];
+        pizzaChart.data.datasets[0].data = [totalChecksMensal, Math.max(0, totalPossivelMes - totalChecksMensal)];
         pizzaChart.update();
     }
-
-    // Atualizar Gráfico Diário
     if (dailyChart) {
+        dailyChart.data.labels = labelsDiarios;
         dailyChart.data.datasets[0].data = porcentagensDiarias;
         dailyChart.update();
     }
 }
 
-// --- AUTH & AVATAR ---
-const googleProvider = new GoogleAuthProvider();
-
+// --- AUTH ---
 onAuthStateChanged(auth, (user) => {
-    const loginModal = document.getElementById('login-modal');
-    const appContent = document.getElementById('app-content');
-    const loader = document.getElementById('loader');
-    const avatar = document.getElementById('user-avatar');
-
     if (user) {
-        loginModal.style.display = 'none';
-        appContent.style.display = 'block';
+        document.getElementById('login-modal').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
         document.getElementById('user-display').innerText = user.displayName || "Usuário";
-        
-        const backupAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'U')}&background=3b82f6&color=fff`;
-        
-        if (user.photoURL) {
-            avatar.src = user.photoURL.replace("s96-c", "s192-c");
-            avatar.onerror = () => avatar.src = backupAvatar;
-        } else {
-            avatar.src = backupAvatar;
-        }
-
+        document.getElementById('user-avatar').src = user.photoURL || "";
         initCharts();
-        
         onSnapshot(collection(db, "users", user.uid, "habits"), (snap) => {
             renderizarTabela(snap.docs.map(d => d.data()));
-            loader.style.opacity = '0';
-            setTimeout(() => loader.style.display = 'none', 500);
+            document.getElementById('loader').style.display = 'none';
         });
-
     } else {
-        appContent.style.display = 'none';
-        loginModal.style.display = 'flex';
-        loader.style.display = 'none';
+        document.getElementById('login-modal').style.display = 'flex';
+        document.getElementById('app-content').style.display = 'none';
+        document.getElementById('loader').style.display = 'none';
     }
 });
 
-document.getElementById('btn-login-google').addEventListener('click', () => {
-    signInWithPopup(auth, googleProvider).catch(err => {
-        showAlert("Erro ao entrar com Google");
-    });
-});
-
-window.toggleMenu = () => document.getElementById('profile-menu').classList.toggle('show');
+document.getElementById('btn-login-google').onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
 window.logout = () => signOut(auth);
-window.showAlert = (msg) => {
-    const b = document.getElementById('custom-alert');
-    b.innerText = msg; b.style.display = 'block';
-    setTimeout(() => b.style.display = 'none', 3000);
+window.toggleMenu = () => document.getElementById('profile-menu').classList.toggle('show');
+window.showAlert = (m) => {
+    const a = document.getElementById('custom-alert');
+    a.innerText = m; a.style.display = 'block';
+    setTimeout(() => a.style.display = 'none', 3000);
 };
 
 function initCharts() {
-    // Pizza
     const ctxP = document.getElementById('pizzaChart').getContext('2d');
-    if(pizzaChart) pizzaChart.destroy();
     pizzaChart = new Chart(ctxP, {
         type: 'doughnut',
-        data: {
-            labels: ['Feito', 'Restante'],
-            datasets: [{ data: [0, 100], backgroundColor: ['#3b82f6', '#f3f4f6'], borderWidth: 0, cutout: '75%' }]
-        },
+        data: { datasets: [{ data: [0, 100], backgroundColor: ['#3b82f6', '#f3f4f6'], borderWidth: 0, cutout: '75%' }] },
         options: { plugins: { legend: { display: false } } }
     });
 
-    // Diário (Barras)
     const ctxD = document.getElementById('dailyChart').getContext('2d');
-    if(dailyChart) dailyChart.destroy();
     dailyChart = new Chart(ctxD, {
         type: 'bar',
-        data: {
-            labels: Array.from({length: diasNoMes}, (_, i) => i + 1),
-            datasets: [{
-                label: '% do dia',
-                data: [],
-                backgroundColor: '#3b82f6',
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } },
-                x: { grid: { display: false } }
-            },
-            plugins: { legend: { display: false } }
-        }
+        data: { labels: [], datasets: [{ data: [], backgroundColor: '#3b82f6', borderRadius: 4 }] },
+        options: { scales: { y: { max: 100, beginAtZero: true } }, plugins: { legend: { display: false } } }
     });
 }
