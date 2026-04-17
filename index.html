@@ -11,71 +11,78 @@
     :root { 
         --primary: #3b82f6; 
         --danger: #ef4444; 
-        --bg: #d1d5db; /* <--- Esse aqui é o gray-300 do Tailwind */
+        --bg: #d1d5db; 
     }
     
     body { 
-        background: var(--bg); /* O body já está usando a variável aqui */
+        background: var(--bg); 
         font-family: 'Plus Jakarta Sans', sans-serif; 
         margin: 0; 
         color: #1f2937; 
     }
         
-        /* Login Moderno */
-        #login-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); display: flex; align-items: center; justify-content: center; z-index: 20000; }
-        .login-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 50px; border-radius: 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); width: 380px; }
-        .btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; border: none; border-radius: 12px; background: white; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .btn-google:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    /* Login */
+    #login-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); display: flex; align-items: center; justify-content: center; z-index: 20000; }
+    .login-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 50px; border-radius: 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); width: 380px; }
+    .btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; border: none; border-radius: 12px; background: white; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .btn-google:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
 
-        .main-wrapper { max-width: 1800px; margin: 0 auto; padding: 20px; }
-        
-        /* Header & Profile */
-        .top-bar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
-        .user-pill { background: white; padding: 8px 20px; border-radius: 50px; display: flex; align-items: center; gap: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .user-pill img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
+    .main-wrapper { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    
+    /* Nova Barra de Controles Superior */
+    .control-center { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 20px; 
+        gap: 15px;
+    }
+    .action-group { display: flex; gap: 12px; align-items: center; }
 
-        /* Dashboard */
-        .dashboard { display: grid; grid-template-columns: 1fr 400px; gap: 25px; margin-top: 20px; }
-        .table-section { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); position: relative; }
-        
-        /* Controles flutuantes */
-        .actions-sidebar { position: absolute; left: -75px; top: 0; display: flex; flex-direction: column; gap: 12px; }
-        .btn-action { width: 60px; height: 60px; border-radius: 18px; border: none; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; font-size: 1.5rem; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
-        .btn-action:hover { transform: scale(1.05); }
-        
-        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .page-info { font-weight: 800; font-size: 1.1rem; color: #6b7280; }
+    /* Header & Profile */
+    .user-pill { background: white; padding: 8px 20px; border-radius: 50px; display: flex; align-items: center; gap: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .user-pill img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
 
-        /* Tabela */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; padding: 12px; border-bottom: 1px solid #f3f4f6; }
-        td { padding: 14px 8px; border-bottom: 1px solid #f9fafb; text-align: center; }
-        
-        .habit-row { transition: 0.2s; }
-        .habit-row.selected-to-delete { background: #fee2e2 !important; }
-        .habit-name { text-align: left; font-weight: 700; width: 200px; }
+    /* Botões de Ação */
+    .btn-action { width: 50px; height: 50px; border-radius: 14px; border: none; background: white; box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; font-size: 1.2rem; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+    .btn-action:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.12); }
+    
+    /* Dashboard */
+    .dashboard { display: grid; grid-template-columns: 1fr 400px; gap: 25px; }
+    .table-section { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
+    
+    .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-info { font-weight: 800; font-size: 1.1rem; color: #6b7280; }
 
-        /* Checkbox como X */
-        .check-box { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto; font-weight: 800; font-size: 14px; color: transparent; transition: 0.2s; }
-        .check-box.checked { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
+    /* Tabela */
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 800px; }
+    th { font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; padding: 12px; border-bottom: 1px solid #f3f4f6; }
+    td { padding: 14px 8px; border-bottom: 1px solid #f9fafb; text-align: center; }
+    
+    .habit-row { transition: 0.2s; }
+    .habit-row.selected-to-delete { background: #fee2e2 !important; }
+    .habit-name { text-align: left; font-weight: 700; width: 200px; }
 
-        /* Gráficos */
-        .stats-section { display: flex; flex-direction: column; gap: 20px; }
-        .pizza-card { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); text-align: center; min-height: 320px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .pizza-title { margin: 0 0 15px 0; font-weight: 800; color: #6b7280; }
-        canvas { max-width: 100% !important; max-height: 200px !important; }
+    /* Checkbox */
+    .check-box { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto; font-weight: 800; font-size: 14px; color: transparent; transition: 0.2s; }
+    .check-box.checked { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
 
-        /* Modais */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 10000; }
-        .modal-card { background: white; padding: 35px; border-radius: 24px; width: 360px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-        .input-std { width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #f3f4f6; border-radius: 12px; outline: none; box-sizing: border-box; }
-        
-        .btn-main { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; background: var(--primary); color: white; margin-top: 10px; transition: 0.2s; }
-        .btn-main:hover { opacity: 0.9; }
-        .btn-delete-all { background: var(--danger); display: none; margin-bottom: 15px; }
-        
-        #custom-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 12px 25px; border-radius: 12px; display: none; z-index: 30000; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    /* Gráficos */
+    .stats-section { display: flex; flex-direction: column; gap: 20px; }
+    .pizza-card { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); text-align: center; min-height: 320px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .pizza-title { margin: 0 0 15px 0; font-weight: 800; color: #6b7280; }
+    canvas { max-width: 100% !important; max-height: 200px !important; }
+
+    /* Modais */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 10000; }
+    .modal-card { background: white; padding: 35px; border-radius: 24px; width: 360px; text-align: center; }
+    .input-std { width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #f3f4f6; border-radius: 12px; outline: none; box-sizing: border-box; }
+    
+    .btn-main { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; background: var(--primary); color: white; margin-top: 10px; }
+    .btn-confirm-del { background: var(--danger); color: white; padding: 10px 20px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; display: none; }
+    
+    #custom-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 12px 25px; border-radius: 12px; display: none; z-index: 30000; }
     </style>
 </head>
 <body>
@@ -86,40 +93,21 @@
         <div class="login-card">
             <h1 style="margin:0; font-size: 2.2rem; font-weight: 800; color: #1e3a8a;">DoTasks</h1>
             <p style="color:#64748b; margin-bottom: 35px; font-size: 0.95rem;">Sua jornada de 365 dias começa aqui.</p>
-            <button class="btn-google" id="btn-login-google-real" onclick="window.loginGoogle()">
-                <svg width="20" height="20" viewBox="0 0 24 24">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12.16-4.53z" fill="#EA4335"/>
-                </svg>
+            <button class="btn-google" onclick="window.loginGoogle()">
                 Entrar com Google
             </button>
         </div>
     </div>
 
-    <div id="modal-perfil" class="modal">
-        <div class="modal-card">
-            <h3>Meu Perfil</h3>
-            <img id="profile-preview" src="" style="width:80px; height:80px; border-radius:50%; margin-bottom:15px; border:3px solid var(--primary); object-fit: cover;">
-            <input type="text" id="input-photo-url" class="input-std" placeholder="URL da nova foto">
-            <button class="btn-main" onclick="window.salvarFoto()">Salvar Foto</button>
-            <button class="btn-main" style="background:#f3f4f6; color:#1f2937;" onclick="window.logout()">Sair da Conta</button>
-            <button class="btn-main" style="background:none; color:#9ca3af;" onclick="window.fecharModais()">Fechar</button>
-        </div>
-    </div>
-
-    <div id="modal-habit" class="modal">
-        <div class="modal-card">
-            <h3>Novo Hábito</h3>
-            <input type="text" id="habit-name-input" class="input-std" placeholder="Ex: Ler 20 páginas">
-            <button class="btn-main" onclick="window.addHabito()">Criar Hábito</button>
-            <button onclick="window.fecharModais()" style="background:none; border:none; color:#9ca3af; margin-top:15px; cursor:pointer;">Cancelar</button>
-        </div>
-    </div>
-
     <div id="app" class="main-wrapper" style="display:none;">
-        <div class="top-bar">
+        
+        <div class="control-center">
+            <div class="action-group">
+                <button class="btn-action" title="Novo Hábito" style="color: #10b981;" onclick="window.abrirHabitModal()">+</button>
+                <button class="btn-action" id="del-toggle" title="Remover Hábito" style="color: var(--danger);" onclick="window.toggleModoExcluir()">🗑️</button>
+                <button id="btn-confirm-delete" class="btn-confirm-del" onclick="window.excluirSelecionados()">Excluir Selecionados (0)</button>
+            </div>
+
             <div class="user-pill" onclick="window.abrirPerfil()">
                 <span id="user-name">Usuário</span>
                 <img id="user-img" src="">
@@ -128,13 +116,6 @@
 
         <div class="dashboard">
             <div class="table-section">
-                <div class="actions-sidebar">
-                    <button class="btn-action" title="Adicionar" style="color: #10b981;" onclick="window.abrirHabitModal()">+</button>
-                    <button class="btn-action" id="del-toggle" title="Lixeira" style="color: var(--danger);" onclick="window.toggleModoExcluir()">🗑️</button>
-                </div>
-
-                <button id="btn-confirm-delete" class="btn-main btn-delete-all" onclick="window.excluirSelecionados()">Excluir Selecionados (0)</button>
-
                 <div class="nav-header">
                     <div class="page-info">Dias <span id="label-inicio">1</span> - <span id="label-fim">21</span> <small>/ 365</small></div>
                     <div style="display:flex; gap:10px;">
@@ -154,16 +135,12 @@
             <div class="stats-section">
                 <div class="pizza-card">
                     <h4 class="pizza-title" id="mes-label">Mês Atual</h4>
-                    <div style="width: 100%; height: 200px; position: relative;">
-                        <canvas id="chartPizza"></canvas>
-                    </div>
+                    <canvas id="chartPizza"></canvas>
                     <div id="perc-text" style="font-size: 2.5rem; font-weight:800; color:var(--primary); margin-top:10px;">0%</div>
                 </div>
                 <div class="pizza-card">
-                    <h4 class="pizza-title">Progresso Diário (%)</h4>
-                    <div style="width: 100%; height: 220px;">
-                        <canvas id="chartBarra"></canvas>
-                    </div>
+                    <h4 class="pizza-title">Frequência</h4>
+                    <canvas id="chartBarra"></canvas>
                 </div>
             </div>
         </div>
