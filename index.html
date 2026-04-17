@@ -5,129 +5,140 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suas Tárefas</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="Favicon/favicon.ico" type="image/x-icon">
     <style>
-        :root { --primary-blue: #3b82f6; --bg-body: #d1d5db; }
-        body { background-color: var(--bg-body); color: #1f2937; font-family: 'Inter', sans-serif; margin: 0; padding: 20px; }
+        :root { --primary: #3b82f6; --danger: #ef4444; --bg: #f3f4f6; }
+        body { background: var(--bg); font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; color: #1f2937; }
         
-        .main-wrapper { max-width: 1800px; margin: 0 auto; }
+        /* Login Moderno */
+        #login-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); display: flex; align-items: center; justify-content: center; z-index: 20000; }
+        .login-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); padding: 50px; border-radius: 30px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); width: 380px; }
+        .btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 15px; border: none; border-radius: 12px; background: white; font-weight: 700; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .btn-google:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+
+        .main-wrapper { max-width: 1400px; margin: 0 auto; padding: 20px; }
         
-        /* Dashboard mais para cima */
-        .dashboard-grid { 
-            display: grid; 
-            grid-template-columns: 1fr 450px; /* Gráfico diário agora tem mais espaço */
-            gap: 30px; 
-            align-items: start; 
-            margin-top: 40px; /* Reduzido de 80px para 40px */
-        }
+        /* Header & Profile */
+        .top-bar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+        .user-pill { background: white; padding: 8px 20px; border-radius: 50px; display: flex; align-items: center; gap: 12px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .user-pill img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
 
-        .table-area { position: relative; padding-left: 80px; }
-        .external-controls { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; gap: 15px; }
+        /* Dashboard */
+        .dashboard { display: grid; grid-template-columns: 1fr 400px; gap: 25px; margin-top: 20px; }
         
-        .side-btn { width: 60px; height: 60px; background: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-weight: bold; transition: 0.2s; }
-        .btn-add { color: #10b981; font-size: 2.5rem; }
-        .btn-del { color: #ef4444; font-size: 1.8rem; }
-
-        .nav-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: white; padding: 12px 25px; border-radius: 15px; }
-
-        .table-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th { color: #9ca3af; font-size: 0.8rem; padding-bottom: 15px; border-bottom: 1px solid #f3f4f6; }
-        td { padding: 12px 4px; border-bottom: 1px solid #f9fafb; text-align: center; }
-
-        .habit-name { text-align: left; font-weight: 700; color: #374151; width: 180px; cursor: default; }
-        /* Estilo quando o modo exclusão está ON */
-        .modo-excluir-ativo .habit-name { color: #ef4444; cursor: pointer; text-decoration: underline; }
-        .modo-excluir-ativo .habit-name:hover { background: #fee2e2; border-radius: 5px; }
-
-        .check-container { width: 22px; height: 22px; background-color: #e5e7eb; border-radius: 6px; cursor: pointer; margin: 0 auto; position: relative; }
-        .check-container.checked { background-color: var(--primary-blue); }
-        .check-container.checked::after { content: '✓'; color: white; position: absolute; left: 5px; top: 0; font-size: 14px; }
-
-        .pizza-card { background: white; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .pizza-title { color: #9ca3af; font-size: 0.7rem; letter-spacing: 1.2px; font-weight: 700; text-transform: uppercase; margin-bottom: 15px; }
+        .table-section { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); position: relative; }
         
-        #input-modal, #delete-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); }
-        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 350px; text-align: center; }
-        .modal-input { width: 100%; padding: 12px; margin: 20px 0; border: 2px solid #eee; border-radius: 10px; box-sizing: border-box; }
+        /* Controles flutuantes */
+        .actions-sidebar { position: absolute; left: -75px; top: 0; display: flex; flex-direction: column; gap: 12px; }
+        .btn-action { width: 60px; height: 60px; border-radius: 18px; border: none; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1); cursor: pointer; font-size: 1.5rem; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-action:hover { transform: scale(1.05); }
         
-        #custom-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 10001; display: none; padding: 12px 25px; background: #1f2937; color: white; border-radius: 10px; }
+        .nav-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-info { font-weight: 800; font-size: 1.1rem; color: #6b7280; }
+
+        /* Tabela */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; padding: 12px; border-bottom: 1px solid #f3f4f6; }
+        td { padding: 14px 8px; border-bottom: 1px solid #f9fafb; text-align: center; }
         
-        .header-minimal { display: flex; justify-content: flex-end; padding: 10px; }
-        .profile-trigger { display: flex; align-items: center; gap: 10px; cursor: pointer; background: white; padding: 5px 15px; border-radius: 30px; }
-        .avatar-img { width: 35px; height: 35px; border-radius: 50%; }
+        .habit-row.selected-to-delete { background: #fee2e2; }
+        .habit-name { text-align: left; font-weight: 700; width: 200px; transition: 0.2s; }
+        .modo-excluir .habit-name { color: var(--danger); cursor: pointer; }
+
+        /* Checkbox como X */
+        .check-box { width: 24px; height: 24px; border-radius: 6px; border: 2px solid #e5e7eb; display: flex; align-items: center; justify-content: center; cursor: pointer; margin: 0 auto; font-weight: 800; color: transparent; transition: 0.2s; }
+        .check-box.checked { border-color: var(--primary); color: var(--primary); }
+
+        /* Modais */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 10000; }
+        .modal-card { background: white; padding: 35px; border-radius: 24px; width: 360px; text-align: center; }
+        .input-std { width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #f3f4f6; border-radius: 12px; outline: none; }
+        
+        .btn-main { width: 100%; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; background: var(--primary); color: white; margin-top: 10px; }
+        .btn-delete-all { background: var(--danger); display: none; margin-bottom: 15px; }
+        
+        #custom-alert { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 12px 25px; border-radius: 12px; display: none; z-index: 30000; }
     </style>
 </head>
 <body>
 
     <div id="custom-alert"></div>
 
-    <div id="input-modal">
-        <div class="modal-content">
+    <div id="login-screen">
+        <div class="login-card">
+            <h1 style="margin:0; font-size: 2rem;">DoTasks</h1>
+            <p style="color:#6b7280; margin-bottom: 30px;">Organize seus hábitos de forma épica.</p>
+            <button class="btn-google" id="login-google">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="20">
+                Entrar com Google
+            </button>
+        </div>
+    </div>
+
+    <div id="modal-perfil" class="modal">
+        <div class="modal-card">
+            <h3>Meu Perfil</h3>
+            <img id="profile-preview" src="" style="width:80px; height:80px; border-radius:50%; margin-bottom:15px; border:3px solid var(--primary);">
+            <input type="text" id="input-photo-url" class="input-std" placeholder="URL da nova foto">
+            <button class="btn-main" onclick="salvarFoto()">Salvar Foto</button>
+            <button class="btn-main" style="background:#f3f4f6; color:#1f2937;" onclick="logout()">Sair da Conta</button>
+            <button class="btn-main" style="background:none; color:#9ca3af;" onclick="fecharModais()">Fechar</button>
+        </div>
+    </div>
+
+    <div id="modal-habit" class="modal">
+        <div class="modal-card">
             <h3>Novo Hábito</h3>
-            <input type="text" id="modalHabitInput" class="modal-input" placeholder="Ex: Treinar">
-            <div style="display:flex; gap:10px;">
-                <button onclick="closeModal()" style="flex:1; padding:10px; border:none; border-radius:8px; cursor:pointer;">Cancelar</button>
-                <button onclick="confirmarNovoHabito()" style="flex:1; padding:10px; background:var(--primary-blue); color:white; border:none; border-radius:8px; cursor:pointer;">Adicionar</button>
-            </div>
+            <input type="text" id="habit-name-input" class="input-std" placeholder="Ex: Ler 20 páginas">
+            <button class="btn-main" onclick="addHabito()">Criar Hábito</button>
+            <button onclick="fecharModais()" style="background:none; border:none; color:#9ca3af; margin-top:15px; cursor:pointer;">Cancelar</button>
         </div>
     </div>
 
-    <div id="delete-modal">
-        <div class="modal-content">
-            <h3>Excluir Hábito?</h3>
-            <p id="habit-to-del-name" style="font-weight:bold; color:#ef4444;"></p>
-            <div style="display:flex; gap:10px;">
-                <button onclick="closeDeleteModal()" style="flex:1; padding:10px; border:none; border-radius:8px; cursor:pointer;">Não</button>
-                <button onclick="confirmarExclusao()" style="flex:1; padding:10px; background:#ef4444; color:white; border:none; border-radius:8px; cursor:pointer;">Sim, excluir</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="login-modal" style="display:none; height:100vh; align-items:center; justify-content:center;">
-        <button id="btn-login-google" style="padding:15px 30px; font-size:1rem; cursor:pointer; border-radius:10px; border:none; background:white; box-shadow:0 4px 10px rgba(0,0,0,0.1);">Entrar com Google</button>
-    </div>
-
-    <div id="app-content" style="display:none;" class="main-wrapper">
-        <div class="header-minimal">
-            <div class="profile-trigger" onclick="logout()">
-                <span id="user-display">Usuário</span>
-                <img id="user-avatar" class="avatar-img" src="" alt="">
+    <div id="app" class="main-wrapper" style="display:none;">
+        <div class="top-bar">
+            <div class="user-pill" onclick="abrirPerfil()">
+                <span id="user-name">Usuário</span>
+                <img id="user-img" src="">
             </div>
         </div>
 
-        <div class="dashboard-grid">
-            <div class="table-area">
-                <div class="external-controls">
-                    <button class="side-btn btn-add" onclick="openModal()">+</button>
-                    <button class="side-btn btn-del" id="del-btn-toggle" onclick="ativarModoExclusao()">✕</button>
+        <div class="dashboard">
+            <div class="table-section">
+                <div class="actions-sidebar">
+                    <button class="btn-action" title="Adicionar" style="color: #10b981;" onclick="abrirHabitModal()">+</button>
+                    <button class="btn-action" id="del-toggle" title="Lixeira" style="color: var(--danger);" onclick="toggleModoExcluir()">🗑️</button>
                 </div>
 
-                <div class="nav-controls">
-                    <div style="font-weight:700;">Dias <span id="dia-inicio-label">1</span> - <span id="dia-fim-label">21</span> <small style="color:#9ca3af;">de 365</small></div>
-                    <div style="display:flex; gap:8px;">
-                        <button onclick="mudarPaginaDias(-1)" class="side-btn" style="width:35px; height:35px; border-radius:8px;">←</button>
-                        <button onclick="mudarPaginaDias(1)" class="side-btn" style="width:35px; height:35px; border-radius:8px;">→</button>
+                <button id="btn-confirm-delete" class="btn-main btn-delete-all" onclick="excluirSelecionados()">Excluir Selecionados (0)</button>
+
+                <div class="nav-header">
+                    <div class="page-info">Dias <span id="label-inicio">1</span> - <span id="label-fim">21</span> <small>/ 365</small></div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-action" style="width:40px; height:40px; border-radius:12px;" onclick="navegarDias(-1)">←</button>
+                        <button class="btn-action" style="width:40px; height:40px; border-radius:12px;" onclick="navegarDias(1)">→</button>
                     </div>
                 </div>
 
-                <div class="table-card">
-                    <table id="tabela-habitos-main">
-                        <thead><tr id="header-row"></tr></thead>
-                        <tbody id="habit-grid"></tbody>
+                <div class="table-container">
+                    <table>
+                        <thead><tr id="table-head"></tr></thead>
+                        <tbody id="table-body"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="charts-area">
+            <div class="stats-section">
                 <div class="pizza-card">
-                    <h3 class="pizza-title" id="ciclo-label">Mês Atual</h3>
-                    <canvas id="pizzaChart" width="200" height="200"></canvas>
-                    <div id="chart-percent">0%</div>
+                    <h4 class="pizza-title" id="mes-label">Mês Atual</h4>
+                    <canvas id="chartPizza"></canvas>
+                    <div id="perc-text" style="font-size: 2.5rem; font-weight:800; color:var(--primary); margin-top:20px;">0%</div>
                 </div>
                 <div class="pizza-card">
-                    <h3 class="pizza-title">Progresso Diário</h3>
-                    <canvas id="dailyChart" width="350" height="250"></canvas>
+                    <h4 class="pizza-title">Frequência</h4>
+                    <canvas id="chartBarra"></canvas>
                 </div>
             </div>
         </div>
